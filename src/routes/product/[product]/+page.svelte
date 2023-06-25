@@ -18,6 +18,14 @@
 			<div>{@html productDetailsData.shortDescription}<br /><br /></div>
 			<div>{@html productDetailsData.longDescription}<br /><br /></div>
 			<div>{productDetailsData.price}<br /><br /></div>
+
+			{#await data.streamed.price}
+				Loading special customer price...
+			{:then value}
+				{value}
+			{:catch error}
+				{error.message}
+			{/await}
 		</div>
 	</div>
 </div>

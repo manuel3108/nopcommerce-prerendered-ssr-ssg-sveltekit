@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 /** @type {import('./$types').LayoutServerLoad} */
 export async function load() {
-	const categories = await prisma.category.findMany();
+	let categories = await prisma.category.findMany();
 	const categoryIds = categories.map((x) => x.Id);
 	const urlRecords = await prisma.urlRecord.findMany({
 		where: {

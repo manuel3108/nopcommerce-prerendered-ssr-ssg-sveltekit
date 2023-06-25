@@ -3,13 +3,13 @@ generator client {
 }
 
 datasource db {
-  provider = "postgres"
+  provider = "sqlserver"
   url      = env("VITE_DATABASE_URL")
 }
 
 model AclRecord {
   Id             Int          @id(map: "PK_AclRecord") @default(autoincrement())
-  EntityName     String       @db.Citext
+  EntityName     String       @db.NVarChar(400)
   CustomerRoleId Int
   EntityId       Int
   CustomerRole   CustomerRole @relation(fields: [CustomerRoleId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_AclRecord_CustomerRoleId_CustomerRole_Id")
@@ -20,13 +20,13 @@ model AclRecord {
 
 model ActivityLog {
   Id                Int             @id(map: "PK_ActivityLog") @default(autoincrement())
-  Comment           String          @db.Citext
-  IpAddress         String?         @db.Citext
-  EntityName        String?         @db.Citext
+  Comment           String          @db.NVarChar(Max)
+  IpAddress         String?         @db.NVarChar(200)
+  EntityName        String?         @db.NVarChar(400)
   ActivityLogTypeId Int
   CustomerId        Int
   EntityId          Int?
-  CreatedOnUtc      DateTime        @db.Timestamp(6)
+  CreatedOnUtc      DateTime
   ActivityLogType   ActivityLogType @relation(fields: [ActivityLogTypeId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ActivityLog_ActivityLogTypeId_ActivityLogType_Id")
   Customer          Customer        @relation(fields: [CustomerId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ActivityLog_CustomerId_Customer_Id")
 
@@ -37,8 +37,8 @@ model ActivityLog {
 
 model ActivityLogType {
   Id            Int           @id(map: "PK_ActivityLogType") @default(autoincrement())
-  SystemKeyword String        @db.Citext
-  Name          String        @db.Citext
+  SystemKeyword String        @db.NVarChar(100)
+  Name          String        @db.NVarChar(200)
   Enabled       Boolean
   ActivityLog   ActivityLog[]
 }
@@ -47,19 +47,19 @@ model Address {
   Id                                            Int                 @id(map: "PK_Address") @default(autoincrement())
   CountryId                                     Int?
   StateProvinceId                               Int?
-  FirstName                                     String?             @db.Citext
-  LastName                                      String?             @db.Citext
-  Email                                         String?             @db.Citext
-  Company                                       String?             @db.Citext
-  County                                        String?             @db.Citext
-  City                                          String?             @db.Citext
-  Address1                                      String?             @db.Citext
-  Address2                                      String?             @db.Citext
-  ZipPostalCode                                 String?             @db.Citext
-  PhoneNumber                                   String?             @db.Citext
-  FaxNumber                                     String?             @db.Citext
-  CustomAttributes                              String?             @db.Citext
-  CreatedOnUtc                                  DateTime            @db.Timestamp(6)
+  FirstName                                     String?             @db.NVarChar(Max)
+  LastName                                      String?             @db.NVarChar(Max)
+  Email                                         String?             @db.NVarChar(Max)
+  Company                                       String?             @db.NVarChar(Max)
+  County                                        String?             @db.NVarChar(Max)
+  City                                          String?             @db.NVarChar(Max)
+  Address1                                      String?             @db.NVarChar(Max)
+  Address2                                      String?             @db.NVarChar(Max)
+  ZipPostalCode                                 String?             @db.NVarChar(Max)
+  PhoneNumber                                   String?             @db.NVarChar(Max)
+  FaxNumber                                     String?             @db.NVarChar(Max)
+  CustomAttributes                              String?             @db.NVarChar(Max)
+  CreatedOnUtc                                  DateTime
   Country                                       Country?            @relation(fields: [CountryId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Address_CountryId_Country_Id")
   StateProvince                                 StateProvince?      @relation(fields: [StateProvinceId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Address_StateProvinceId_StateProvince_Id")
   Affiliate                                     Affiliate[]
@@ -76,7 +76,7 @@ model Address {
 
 model AddressAttribute {
   Id                     Int                     @id(map: "PK_AddressAttribute") @default(autoincrement())
-  Name                   String                  @db.Citext
+  Name                   String                  @db.NVarChar(400)
   IsRequired             Boolean
   AttributeControlTypeId Int
   DisplayOrder           Int
@@ -85,7 +85,7 @@ model AddressAttribute {
 
 model AddressAttributeValue {
   Id                 Int              @id(map: "PK_AddressAttributeValue") @default(autoincrement())
-  Name               String           @db.Citext
+  Name               String           @db.NVarChar(400)
   AddressAttributeId Int
   IsPreSelected      Boolean
   DisplayOrder       Int
@@ -97,11 +97,11 @@ model AddressAttributeValue {
 model Affiliate {
   Id              Int     @id(map: "PK_Affiliate") @default(autoincrement())
   AddressId       Int
-  AdminComment    String? @db.Citext
-  FriendlyUrlName String? @db.Citext
+  AdminComment    String? @db.NVarChar(Max)
+  FriendlyUrlName String? @db.NVarChar(Max)
   Deleted         Boolean
   Active          Boolean
-  Address         Address @relation(fields: [AddressId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Affiliate_AddressId_Address_Id")
+  Address         Address @relation(fields: [AddressId], references: [Id], onUpdate: NoAction, map: "FK_Affiliate_AddressId_Address_Id")
 
   @@index([AddressId], map: "IX_Affiliate_AddressId")
 }
@@ -111,7 +111,7 @@ model BackInStockSubscription {
   CustomerId   Int
   ProductId    Int
   StoreId      Int
-  CreatedOnUtc DateTime @db.Timestamp(6)
+  CreatedOnUtc DateTime
   Customer     Customer @relation(fields: [CustomerId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_BackInStockSubscription_CustomerId_Customer_Id")
   Product      Product  @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_BackInStockSubscription_ProductId_Product_Id")
 
@@ -124,10 +124,10 @@ model BlogComment {
   StoreId      Int
   CustomerId   Int
   BlogPostId   Int
-  CommentText  String?  @db.Citext
+  CommentText  String?  @db.NVarChar(Max)
   IsApproved   Boolean
-  CreatedOnUtc DateTime @db.Timestamp(6)
-  BlogPost     BlogPost @relation(fields: [BlogPostId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_BlogComment_BlogPostId_BlogPost_Id")
+  CreatedOnUtc DateTime
+  BlogPost     BlogPost @relation(fields: [BlogPostId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_BlogComment_BlogPostId_BlogPost_Id")
   Customer     Customer @relation(fields: [CustomerId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_BlogComment_CustomerId_Customer_Id")
   Store        Store    @relation(fields: [StoreId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_BlogComment_StoreId_Store_Id")
 
@@ -138,20 +138,20 @@ model BlogComment {
 
 model BlogPost {
   Id               Int           @id(map: "PK_BlogPost") @default(autoincrement())
-  Title            String        @db.Citext
-  Body             String        @db.Citext
-  MetaKeywords     String?       @db.Citext
-  MetaTitle        String?       @db.Citext
+  Title            String        @db.NVarChar(Max)
+  Body             String        @db.NVarChar(Max)
+  MetaKeywords     String?       @db.NVarChar(400)
+  MetaTitle        String?       @db.NVarChar(400)
   LanguageId       Int
   IncludeInSitemap Boolean
-  BodyOverview     String?       @db.Citext
+  BodyOverview     String?       @db.NVarChar(Max)
   AllowComments    Boolean
-  Tags             String?       @db.Citext
-  StartDateUtc     DateTime?     @db.Timestamp(6)
-  EndDateUtc       DateTime?     @db.Timestamp(6)
-  MetaDescription  String?       @db.Citext
+  Tags             String?       @db.NVarChar(Max)
+  StartDateUtc     DateTime?
+  EndDateUtc       DateTime?
+  MetaDescription  String?       @db.NVarChar(Max)
   LimitedToStores  Boolean
-  CreatedOnUtc     DateTime      @db.Timestamp(6)
+  CreatedOnUtc     DateTime
   BlogComment      BlogComment[]
   Language         Language      @relation(fields: [LanguageId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_BlogPost_LanguageId_Language_Id")
 
@@ -160,24 +160,24 @@ model BlogPost {
 
 model Campaign {
   Id                    Int       @id(map: "PK_Campaign") @default(autoincrement())
-  Name                  String    @db.Citext
-  Subject               String    @db.Citext
-  Body                  String    @db.Citext
+  Name                  String    @db.NVarChar(Max)
+  Subject               String    @db.NVarChar(Max)
+  Body                  String    @db.NVarChar(Max)
   StoreId               Int
   CustomerRoleId        Int
-  CreatedOnUtc          DateTime  @db.Timestamp(6)
-  DontSendBeforeDateUtc DateTime? @db.Timestamp(6)
+  CreatedOnUtc          DateTime
+  DontSendBeforeDateUtc DateTime?
 }
 
 model Category {
   Id                             Int                            @id(map: "PK_Category") @default(autoincrement())
-  Name                           String                         @db.Citext
-  MetaKeywords                   String?                        @db.Citext
-  MetaTitle                      String?                        @db.Citext
-  PageSizeOptions                String?                        @db.Citext
-  Description                    String?                        @db.Citext
+  Name                           String                         @db.NVarChar(400)
+  MetaKeywords                   String?                        @db.NVarChar(400)
+  MetaTitle                      String?                        @db.NVarChar(400)
+  PageSizeOptions                String?                        @db.NVarChar(200)
+  Description                    String?                        @db.NVarChar(Max)
   CategoryTemplateId             Int
-  MetaDescription                String?                        @db.Citext
+  MetaDescription                String?                        @db.NVarChar(Max)
   ParentCategoryId               Int
   PictureId                      Int
   PageSize                       Int
@@ -189,8 +189,8 @@ model Category {
   Published                      Boolean
   Deleted                        Boolean
   DisplayOrder                   Int
-  CreatedOnUtc                   DateTime                       @db.Timestamp(6)
-  UpdatedOnUtc                   DateTime                       @db.Timestamp(6)
+  CreatedOnUtc                   DateTime
+  UpdatedOnUtc                   DateTime
   PriceRangeFiltering            Boolean
   PriceFrom                      Decimal                        @db.Decimal(18, 4)
   PriceTo                        Decimal                        @db.Decimal(18, 4)
@@ -207,50 +207,50 @@ model Category {
 
 model CategoryTemplate {
   Id           Int    @id(map: "PK_CategoryTemplate") @default(autoincrement())
-  Name         String @db.Citext
-  ViewPath     String @db.Citext
+  Name         String @db.NVarChar(400)
+  ViewPath     String @db.NVarChar(400)
   DisplayOrder Int
 }
 
 model CheckoutAttribute {
   Id                              Int                      @id(map: "PK_CheckoutAttribute") @default(autoincrement())
-  Name                            String                   @db.Citext
-  TextPrompt                      String?                  @db.Citext
+  Name                            String                   @db.NVarChar(400)
+  TextPrompt                      String?                  @db.NVarChar(Max)
+  IsRequired                      Boolean
   ShippableProductRequired        Boolean
   IsTaxExempt                     Boolean
   TaxCategoryId                   Int
+  AttributeControlTypeId          Int
+  DisplayOrder                    Int
   LimitedToStores                 Boolean
   ValidationMinLength             Int?
   ValidationMaxLength             Int?
-  ValidationFileAllowedExtensions String?                  @db.Citext
+  ValidationFileAllowedExtensions String?                  @db.NVarChar(Max)
   ValidationFileMaximumSize       Int?
-  DefaultValue                    String?                  @db.Citext
-  ConditionAttributeXml           String?                  @db.Citext
-  IsRequired                      Boolean
-  AttributeControlTypeId          Int
-  DisplayOrder                    Int
+  DefaultValue                    String?                  @db.NVarChar(Max)
+  ConditionAttributeXml           String?                  @db.NVarChar(Max)
   CheckoutAttributeValue          CheckoutAttributeValue[]
 }
 
 model CheckoutAttributeValue {
   Id                  Int               @id(map: "PK_CheckoutAttributeValue") @default(autoincrement())
-  Name                String            @db.Citext
-  ColorSquaresRgb     String?           @db.Citext
+  Name                String            @db.NVarChar(400)
+  ColorSquaresRgb     String?           @db.NVarChar(100)
   CheckoutAttributeId Int
   PriceAdjustment     Decimal           @db.Decimal(18, 4)
   WeightAdjustment    Decimal           @db.Decimal(18, 4)
   IsPreSelected       Boolean
   DisplayOrder        Int
-  CheckoutAttribute   CheckoutAttribute @relation(fields: [CheckoutAttributeId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_CheckoutAttributeValue_CheckoutAttributeId_CheckoutAttribute")
+  CheckoutAttribute   CheckoutAttribute @relation(fields: [CheckoutAttributeId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_CheckoutAttributeValue_CheckoutAttributeId_CheckoutAttribute_Id")
 
   @@index([CheckoutAttributeId], map: "IX_CheckoutAttributeValue_CheckoutAttributeId")
 }
 
 model Country {
   Id                         Int                          @id(map: "PK_Country") @default(autoincrement())
-  Name                       String                       @db.Citext
-  TwoLetterIsoCode           String?                      @db.Citext
-  ThreeLetterIsoCode         String?                      @db.Citext
+  Name                       String                       @db.NVarChar(100)
+  TwoLetterIsoCode           String?                      @db.NVarChar(2)
+  ThreeLetterIsoCode         String?                      @db.NVarChar(3)
   AllowsBilling              Boolean
   AllowsShipping             Boolean
   NumericIsoCode             Int
@@ -273,16 +273,16 @@ model CrossSellProduct {
 
 model Currency {
   Id               Int        @id(map: "PK_Currency") @default(autoincrement())
-  Name             String     @db.Citext
-  CurrencyCode     String     @db.Citext
-  DisplayLocale    String?    @db.Citext
-  CustomFormatting String?    @db.Citext
+  Name             String     @db.NVarChar(50)
+  CurrencyCode     String     @db.NVarChar(5)
+  DisplayLocale    String?    @db.NVarChar(50)
+  CustomFormatting String?    @db.NVarChar(50)
   Rate             Decimal    @db.Decimal(18, 4)
   LimitedToStores  Boolean
   Published        Boolean
   DisplayOrder     Int
-  CreatedOnUtc     DateTime   @db.Timestamp(6)
-  UpdatedOnUtc     DateTime   @db.Timestamp(6)
+  CreatedOnUtc     DateTime
+  UpdatedOnUtc     DateTime
   RoundingTypeId   Int
   Customer         Customer[]
 
@@ -291,50 +291,50 @@ model Currency {
 
 model Customer {
   Id                                                                   Int                             @id(map: "PK_Customer") @default(autoincrement())
-  Username                                                             String?                         @db.Citext
-  Email                                                                String?                         @db.Citext
-  EmailToRevalidate                                                    String?                         @db.Citext
-  FirstName                                                            String?                         @db.Citext
-  LastName                                                             String?                         @db.Citext
-  Gender                                                               String?                         @db.Citext
-  Company                                                              String?                         @db.Citext
-  StreetAddress                                                        String?                         @db.Citext
-  StreetAddress2                                                       String?                         @db.Citext
-  ZipPostalCode                                                        String?                         @db.Citext
-  City                                                                 String?                         @db.Citext
-  County                                                               String?                         @db.Citext
-  Phone                                                                String?                         @db.Citext
-  Fax                                                                  String?                         @db.Citext
-  VatNumber                                                            String?                         @db.Citext
-  TimeZoneId                                                           String?                         @db.Citext
-  CustomCustomerAttributesXML                                          String?                         @db.Citext
-  DateOfBirth                                                          DateTime?                       @db.Timestamp(6)
-  SystemName                                                           String?                         @db.Citext
-  CurrencyId                                                           Int?
-  LanguageId                                                           Int?
+  Username                                                             String?
+  Email                                                                String?
+  EmailToRevalidate                                                    String?
+  SystemName                                                           String?                         @db.NVarChar(400)
   BillingAddress_Id                                                    Int?
   ShippingAddress_Id                                                   Int?
-  CustomerGuid                                                         String                          @db.Uuid
-  CountryId                                                            Int
-  StateProvinceId                                                      Int
-  VatNumberStatusId                                                    Int
-  TaxDisplayTypeId                                                     Int?
-  AdminComment                                                         String?                         @db.Citext
+  CustomerGuid                                                         String                          @db.UniqueIdentifier
+  AdminComment                                                         String?                         @db.NVarChar(Max)
   IsTaxExempt                                                          Boolean
   AffiliateId                                                          Int
   VendorId                                                             Int
   HasShoppingCartItems                                                 Boolean
   RequireReLogin                                                       Boolean
   FailedLoginAttempts                                                  Int
-  CannotLoginUntilDateUtc                                              DateTime?                       @db.Timestamp(6)
+  CannotLoginUntilDateUtc                                              DateTime?
   Active                                                               Boolean
   Deleted                                                              Boolean
   IsSystemAccount                                                      Boolean
-  LastIpAddress                                                        String?                         @db.Citext
-  CreatedOnUtc                                                         DateTime                        @db.Timestamp(6)
-  LastLoginDateUtc                                                     DateTime?                       @db.Timestamp(6)
-  LastActivityDateUtc                                                  DateTime                        @db.Timestamp(6)
+  LastIpAddress                                                        String?                         @db.NVarChar(Max)
+  CreatedOnUtc                                                         DateTime
+  LastLoginDateUtc                                                     DateTime?
+  LastActivityDateUtc                                                  DateTime
   RegisteredInStoreId                                                  Int
+  FirstName                                                            String?
+  LastName                                                             String?
+  Gender                                                               String?
+  DateOfBirth                                                          DateTime?
+  Company                                                              String?
+  StreetAddress                                                        String?
+  StreetAddress2                                                       String?
+  ZipPostalCode                                                        String?
+  City                                                                 String?
+  County                                                               String?
+  CountryId                                                            Int
+  StateProvinceId                                                      Int
+  Phone                                                                String?
+  Fax                                                                  String?
+  VatNumber                                                            String?
+  VatNumberStatusId                                                    Int
+  TimeZoneId                                                           String?
+  CustomCustomerAttributesXML                                          String?                         @db.NVarChar(Max)
+  CurrencyId                                                           Int?
+  LanguageId                                                           Int?
+  TaxDisplayTypeId                                                     Int?
   ActivityLog                                                          ActivityLog[]
   BackInStockSubscription                                              BackInStockSubscription[]
   BlogComment                                                          BlogComment[]
@@ -342,9 +342,9 @@ model Customer {
   Currency                                                             Currency?                       @relation(fields: [CurrencyId], references: [Id], onUpdate: NoAction, map: "FK_Customer_CurrencyId_Currency_Id")
   Language                                                             Language?                       @relation(fields: [LanguageId], references: [Id], onUpdate: NoAction, map: "FK_Customer_LanguageId_Language_Id")
   Address_Customer_ShippingAddress_IdToAddress                         Address?                        @relation("Customer_ShippingAddress_IdToAddress", fields: [ShippingAddress_Id], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Customer_ShippingAddress_Id_Address_Id")
+  Customer_CustomerRole_Mapping                                        Customer_CustomerRole_Mapping[]
   CustomerAddresses                                                    CustomerAddresses[]
   CustomerPassword                                                     CustomerPassword[]
-  Customer_CustomerRole_Mapping                                        Customer_CustomerRole_Mapping[]
   ExternalAuthenticationRecord                                         ExternalAuthenticationRecord[]
   Forums_Post                                                          Forums_Post[]
   Forums_PrivateMessage_Forums_PrivateMessage_FromCustomerIdToCustomer Forums_PrivateMessage[]         @relation("Forums_PrivateMessage_FromCustomerIdToCustomer")
@@ -371,6 +371,17 @@ model Customer {
   @@index([Username], map: "IX_Customer_Username")
 }
 
+model Customer_CustomerRole_Mapping {
+  Customer_Id     Int
+  CustomerRole_Id Int
+  Customer        Customer     @relation(fields: [Customer_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Customer_CustomerRole_Mapping_Customer_Id_Customer_Id")
+  CustomerRole    CustomerRole @relation(fields: [CustomerRole_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Customer_CustomerRole_Mapping_CustomerRole_Id_CustomerRole_Id")
+
+  @@id([Customer_Id, CustomerRole_Id], map: "PK_Customer_CustomerRole_Mapping")
+  @@index([Customer_Id], map: "IX_Customer_CustomerRole_Mapping_Customer_Id")
+  @@index([CustomerRole_Id], map: "IX_Customer_CustomerRole_Mapping_CustomerRole_Id")
+}
+
 model CustomerAddresses {
   Address_Id  Int
   Customer_Id Int
@@ -384,7 +395,7 @@ model CustomerAddresses {
 
 model CustomerAttribute {
   Id                     Int                      @id(map: "PK_CustomerAttribute") @default(autoincrement())
-  Name                   String                   @db.Citext
+  Name                   String                   @db.NVarChar(400)
   IsRequired             Boolean
   AttributeControlTypeId Int
   DisplayOrder           Int
@@ -393,11 +404,11 @@ model CustomerAttribute {
 
 model CustomerAttributeValue {
   Id                  Int               @id(map: "PK_CustomerAttributeValue") @default(autoincrement())
-  Name                String            @db.Citext
+  Name                String            @db.NVarChar(400)
   CustomerAttributeId Int
   IsPreSelected       Boolean
   DisplayOrder        Int
-  CustomerAttribute   CustomerAttribute @relation(fields: [CustomerAttributeId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_CustomerAttributeValue_CustomerAttributeId_CustomerAttribute")
+  CustomerAttribute   CustomerAttribute @relation(fields: [CustomerAttributeId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_CustomerAttributeValue_CustomerAttributeId_CustomerAttribute_Id")
 
   @@index([CustomerAttributeId], map: "IX_CustomerAttributeValue_CustomerAttributeId")
 }
@@ -405,10 +416,10 @@ model CustomerAttributeValue {
 model CustomerPassword {
   Id               Int      @id(map: "PK_CustomerPassword") @default(autoincrement())
   CustomerId       Int
-  Password         String?  @db.Citext
+  Password         String?  @db.NVarChar(Max)
   PasswordFormatId Int
-  PasswordSalt     String?  @db.Citext
-  CreatedOnUtc     DateTime @db.Timestamp(6)
+  PasswordSalt     String?  @db.NVarChar(Max)
+  CreatedOnUtc     DateTime
   Customer         Customer @relation(fields: [CustomerId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_CustomerPassword_CustomerId_Customer_Id")
 
   @@index([CustomerId], map: "IX_CustomerPassword_CustomerId")
@@ -416,8 +427,8 @@ model CustomerPassword {
 
 model CustomerRole {
   Id                            Int                             @id(map: "PK_CustomerRole") @default(autoincrement())
-  Name                          String                          @db.Citext
-  SystemName                    String?                         @db.Citext
+  Name                          String                          @db.NVarChar(255)
+  SystemName                    String?                         @db.NVarChar(255)
   FreeShipping                  Boolean
   TaxExempt                     Boolean
   Active                        Boolean
@@ -432,35 +443,24 @@ model CustomerRole {
   TierPrice                     TierPrice[]
 }
 
-model Customer_CustomerRole_Mapping {
-  Customer_Id     Int
-  CustomerRole_Id Int
-  CustomerRole    CustomerRole @relation(fields: [CustomerRole_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Customer_CustomerRole_Mapping_CustomerRole_Id_CustomerRole_I")
-  Customer        Customer     @relation(fields: [Customer_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Customer_CustomerRole_Mapping_Customer_Id_Customer_Id")
-
-  @@id([Customer_Id, CustomerRole_Id], map: "PK_Customer_CustomerRole_Mapping")
-  @@index([CustomerRole_Id], map: "IX_Customer_CustomerRole_Mapping_CustomerRole_Id")
-  @@index([Customer_Id], map: "IX_Customer_CustomerRole_Mapping_Customer_Id")
-}
-
 model DeliveryDate {
   Id           Int    @id(map: "PK_DeliveryDate") @default(autoincrement())
-  Name         String @db.Citext
+  Name         String @db.NVarChar(400)
   DisplayOrder Int
 }
 
 model Discount {
   Id                              Int                               @id(map: "PK_Discount") @default(autoincrement())
-  Name                            String                            @db.Citext
-  CouponCode                      String?                           @db.Citext
-  AdminComment                    String?                           @db.Citext
+  Name                            String                            @db.NVarChar(200)
+  CouponCode                      String?                           @db.NVarChar(100)
+  AdminComment                    String?                           @db.NVarChar(Max)
   DiscountTypeId                  Int
   UsePercentage                   Boolean
   DiscountPercentage              Decimal                           @db.Decimal(18, 4)
   DiscountAmount                  Decimal                           @db.Decimal(18, 4)
   MaximumDiscountAmount           Decimal?                          @db.Decimal(18, 4)
-  StartDateUtc                    DateTime?                         @db.Timestamp(6)
-  EndDateUtc                      DateTime?                         @db.Timestamp(6)
+  StartDateUtc                    DateTime?
+  EndDateUtc                      DateTime?
   RequiresCouponCode              Boolean
   IsCumulative                    Boolean
   DiscountLimitationId            Int
@@ -468,38 +468,11 @@ model Discount {
   MaximumDiscountedQuantity       Int?
   AppliedToSubCategories          Boolean
   IsActive                        Boolean
-  DiscountRequirement             DiscountRequirement[]
-  DiscountUsageHistory            DiscountUsageHistory[]
   Discount_AppliedToCategories    Discount_AppliedToCategories[]
   Discount_AppliedToManufacturers Discount_AppliedToManufacturers[]
   Discount_AppliedToProducts      Discount_AppliedToProducts[]
-}
-
-model DiscountRequirement {
-  Id                                Int                   @id(map: "PK_DiscountRequirement") @default(autoincrement())
-  DiscountId                        Int
-  ParentId                          Int?
-  DiscountRequirementRuleSystemName String?               @db.Citext
-  InteractionTypeId                 Int?
-  IsGroup                           Boolean
-  Discount                          Discount              @relation(fields: [DiscountId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_DiscountRequirement_DiscountId_Discount_Id")
-  DiscountRequirement               DiscountRequirement?  @relation("DiscountRequirementToDiscountRequirement", fields: [ParentId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DiscountRequirement_ParentId_DiscountRequirement_Id")
-  other_DiscountRequirement         DiscountRequirement[] @relation("DiscountRequirementToDiscountRequirement")
-
-  @@index([DiscountId], map: "IX_DiscountRequirement_DiscountId")
-  @@index([ParentId], map: "IX_DiscountRequirement_ParentId")
-}
-
-model DiscountUsageHistory {
-  Id           Int      @id(map: "PK_DiscountUsageHistory") @default(autoincrement())
-  DiscountId   Int
-  OrderId      Int
-  CreatedOnUtc DateTime @db.Timestamp(6)
-  Discount     Discount @relation(fields: [DiscountId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_DiscountUsageHistory_DiscountId_Discount_Id")
-  Order        Order    @relation(fields: [OrderId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_DiscountUsageHistory_OrderId_Order_Id")
-
-  @@index([DiscountId], map: "IX_DiscountUsageHistory_DiscountId")
-  @@index([OrderId], map: "IX_DiscountUsageHistory_OrderId")
+  DiscountRequirement             DiscountRequirement[]
+  DiscountUsageHistory            DiscountUsageHistory[]
 }
 
 model Discount_AppliedToCategories {
@@ -517,7 +490,7 @@ model Discount_AppliedToManufacturers {
   Discount_Id     Int
   Manufacturer_Id Int
   Discount        Discount     @relation(fields: [Discount_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Discount_AppliedToManufacturers_Discount_Id_Discount_Id")
-  Manufacturer    Manufacturer @relation(fields: [Manufacturer_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Discount_AppliedToManufacturers_Manufacturer_Id_Manufacturer")
+  Manufacturer    Manufacturer @relation(fields: [Manufacturer_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Discount_AppliedToManufacturers_Manufacturer_Id_Manufacturer_Id")
 
   @@id([Discount_Id, Manufacturer_Id], map: "PK_Discount_AppliedToManufacturers")
   @@index([Discount_Id], map: "IX_Discount_AppliedToManufacturers_Discount_Id")
@@ -535,25 +508,52 @@ model Discount_AppliedToProducts {
   @@index([Product_Id], map: "IX_Discount_AppliedToProducts_Product_Id")
 }
 
+model DiscountRequirement {
+  Id                                Int                   @id(map: "PK_DiscountRequirement") @default(autoincrement())
+  DiscountId                        Int
+  ParentId                          Int?
+  DiscountRequirementRuleSystemName String?               @db.NVarChar(Max)
+  InteractionTypeId                 Int?
+  IsGroup                           Boolean
+  Discount                          Discount              @relation(fields: [DiscountId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_DiscountRequirement_DiscountId_Discount_Id")
+  DiscountRequirement               DiscountRequirement?  @relation("DiscountRequirementToDiscountRequirement", fields: [ParentId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DiscountRequirement_ParentId_DiscountRequirement_Id")
+  other_DiscountRequirement         DiscountRequirement[] @relation("DiscountRequirementToDiscountRequirement")
+
+  @@index([DiscountId], map: "IX_DiscountRequirement_DiscountId")
+  @@index([ParentId], map: "IX_DiscountRequirement_ParentId")
+}
+
+model DiscountUsageHistory {
+  Id           Int      @id(map: "PK_DiscountUsageHistory") @default(autoincrement())
+  DiscountId   Int
+  OrderId      Int
+  CreatedOnUtc DateTime
+  Discount     Discount @relation(fields: [DiscountId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_DiscountUsageHistory_DiscountId_Discount_Id")
+  Order        Order    @relation(fields: [OrderId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_DiscountUsageHistory_OrderId_Order_Id")
+
+  @@index([DiscountId], map: "IX_DiscountUsageHistory_DiscountId")
+  @@index([OrderId], map: "IX_DiscountUsageHistory_OrderId")
+}
+
 model Download {
   Id             Int     @id(map: "PK_Download") @default(autoincrement())
-  DownloadGuid   String  @db.Uuid
+  DownloadGuid   String  @db.UniqueIdentifier
   UseDownloadUrl Boolean
-  DownloadUrl    String? @db.Citext
+  DownloadUrl    String? @db.NVarChar(Max)
   DownloadBinary Bytes?
-  ContentType    String? @db.Citext
-  Filename       String? @db.Citext
-  Extension      String? @db.Citext
+  ContentType    String? @db.NVarChar(Max)
+  Filename       String? @db.NVarChar(Max)
+  Extension      String? @db.NVarChar(Max)
   IsNew          Boolean
 }
 
 model EmailAccount {
   Id                    Int           @id(map: "PK_EmailAccount") @default(autoincrement())
-  DisplayName           String?       @db.Citext
-  Email                 String        @db.Citext
-  Host                  String        @db.Citext
-  Username              String        @db.Citext
-  Password              String        @db.Citext
+  DisplayName           String?       @db.NVarChar(255)
+  Email                 String        @db.NVarChar(255)
+  Host                  String        @db.NVarChar(255)
+  Username              String        @db.NVarChar(255)
+  Password              String        @db.NVarChar(255)
   Port                  Int
   EnableSsl             Boolean
   UseDefaultCredentials Boolean
@@ -563,12 +563,12 @@ model EmailAccount {
 model ExternalAuthenticationRecord {
   Id                        Int      @id(map: "PK_ExternalAuthenticationRecord") @default(autoincrement())
   CustomerId                Int
-  Email                     String?  @db.Citext
-  ExternalIdentifier        String?  @db.Citext
-  ExternalDisplayIdentifier String?  @db.Citext
-  OAuthToken                String?  @db.Citext
-  OAuthAccessToken          String?  @db.Citext
-  ProviderSystemName        String?  @db.Citext
+  Email                     String?  @db.NVarChar(Max)
+  ExternalIdentifier        String?  @db.NVarChar(Max)
+  ExternalDisplayIdentifier String?  @db.NVarChar(Max)
+  OAuthToken                String?  @db.NVarChar(Max)
+  OAuthAccessToken          String?  @db.NVarChar(Max)
+  ProviderSystemName        String?  @db.NVarChar(Max)
   Customer                  Customer @relation(fields: [CustomerId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ExternalAuthenticationRecord_CustomerId_Customer_Id")
 
   @@index([CustomerId], map: "IX_ExternalAuthenticationRecord_CustomerId")
@@ -576,18 +576,18 @@ model ExternalAuthenticationRecord {
 
 model Forums_Forum {
   Id                 Int            @id(map: "PK_Forums_Forum") @default(autoincrement())
-  Name               String         @db.Citext
+  Name               String         @db.NVarChar(200)
   ForumGroupId       Int
-  Description        String?        @db.Citext
+  Description        String?        @db.NVarChar(Max)
   NumTopics          Int
   NumPosts           Int
   LastTopicId        Int
   LastPostId         Int
   LastPostCustomerId Int
-  LastPostTime       DateTime?      @db.Timestamp(6)
+  LastPostTime       DateTime?
   DisplayOrder       Int
-  CreatedOnUtc       DateTime       @db.Timestamp(6)
-  UpdatedOnUtc       DateTime       @db.Timestamp(6)
+  CreatedOnUtc       DateTime
+  UpdatedOnUtc       DateTime
   Forums_Group       Forums_Group   @relation(fields: [ForumGroupId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Forums_Forum_ForumGroupId_Forums_Group_Id")
   Forums_Topic       Forums_Topic[]
 
@@ -597,10 +597,10 @@ model Forums_Forum {
 
 model Forums_Group {
   Id           Int            @id(map: "PK_Forums_Group") @default(autoincrement())
-  Name         String         @db.Citext
+  Name         String         @db.NVarChar(200)
   DisplayOrder Int
-  CreatedOnUtc DateTime       @db.Timestamp(6)
-  UpdatedOnUtc DateTime       @db.Timestamp(6)
+  CreatedOnUtc DateTime
+  UpdatedOnUtc DateTime
   Forums_Forum Forums_Forum[]
 
   @@index([DisplayOrder], map: "IX_Forums_Group_DisplayOrder")
@@ -608,14 +608,14 @@ model Forums_Group {
 
 model Forums_Post {
   Id              Int               @id(map: "PK_Forums_Post") @default(autoincrement())
-  Text            String            @db.Citext
-  IPAddress       String?           @db.Citext
+  Text            String            @db.NVarChar(Max)
+  IPAddress       String?           @db.NVarChar(100)
   CustomerId      Int
   TopicId         Int
-  CreatedOnUtc    DateTime          @db.Timestamp(6)
-  UpdatedOnUtc    DateTime          @db.Timestamp(6)
+  CreatedOnUtc    DateTime
+  UpdatedOnUtc    DateTime
   VoteCount       Int
-  Customer        Customer          @relation(fields: [CustomerId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Forums_Post_CustomerId_Customer_Id")
+  Customer        Customer          @relation(fields: [CustomerId], references: [Id], onUpdate: NoAction, map: "FK_Forums_Post_CustomerId_Customer_Id")
   Forums_Topic    Forums_Topic      @relation(fields: [TopicId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Forums_Post_TopicId_Forums_Topic_Id")
   Forums_PostVote Forums_PostVote[]
 
@@ -628,7 +628,7 @@ model Forums_PostVote {
   ForumPostId  Int
   CustomerId   Int
   IsUp         Boolean
-  CreatedOnUtc DateTime    @db.Timestamp(6)
+  CreatedOnUtc DateTime
   Forums_Post  Forums_Post @relation(fields: [ForumPostId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Forums_PostVote_ForumPostId_Forums_Post_Id")
 
   @@index([ForumPostId], map: "IX_Forums_PostVote_ForumPostId")
@@ -636,17 +636,17 @@ model Forums_PostVote {
 
 model Forums_PrivateMessage {
   Id                                                      Int      @id(map: "PK_Forums_PrivateMessage") @default(autoincrement())
-  Subject                                                 String   @db.Citext
-  Text                                                    String   @db.Citext
+  Subject                                                 String   @db.NVarChar(450)
+  Text                                                    String   @db.NVarChar(Max)
   FromCustomerId                                          Int
   ToCustomerId                                            Int
   StoreId                                                 Int
   IsRead                                                  Boolean
   IsDeletedByAuthor                                       Boolean
   IsDeletedByRecipient                                    Boolean
-  CreatedOnUtc                                            DateTime @db.Timestamp(6)
-  Customer_Forums_PrivateMessage_FromCustomerIdToCustomer Customer @relation("Forums_PrivateMessage_FromCustomerIdToCustomer", fields: [FromCustomerId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Forums_PrivateMessage_FromCustomerId_Customer_Id")
-  Customer_Forums_PrivateMessage_ToCustomerIdToCustomer   Customer @relation("Forums_PrivateMessage_ToCustomerIdToCustomer", fields: [ToCustomerId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Forums_PrivateMessage_ToCustomerId_Customer_Id")
+  CreatedOnUtc                                            DateTime
+  Customer_Forums_PrivateMessage_FromCustomerIdToCustomer Customer @relation("Forums_PrivateMessage_FromCustomerIdToCustomer", fields: [FromCustomerId], references: [Id], onUpdate: NoAction, map: "FK_Forums_PrivateMessage_FromCustomerId_Customer_Id")
+  Customer_Forums_PrivateMessage_ToCustomerIdToCustomer   Customer @relation("Forums_PrivateMessage_ToCustomerIdToCustomer", fields: [ToCustomerId], references: [Id], onUpdate: NoAction, map: "FK_Forums_PrivateMessage_ToCustomerId_Customer_Id")
 
   @@index([FromCustomerId], map: "IX_Forums_PrivateMessage_FromCustomerId")
   @@index([ToCustomerId], map: "IX_Forums_PrivateMessage_ToCustomerId")
@@ -655,11 +655,11 @@ model Forums_PrivateMessage {
 model Forums_Subscription {
   Id               Int      @id(map: "PK_Forums_Subscription") @default(autoincrement())
   CustomerId       Int
-  SubscriptionGuid String   @db.Uuid
+  SubscriptionGuid String   @db.UniqueIdentifier
   ForumId          Int
   TopicId          Int
-  CreatedOnUtc     DateTime @db.Timestamp(6)
-  Customer         Customer @relation(fields: [CustomerId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Forums_Subscription_CustomerId_Customer_Id")
+  CreatedOnUtc     DateTime
+  Customer         Customer @relation(fields: [CustomerId], references: [Id], onUpdate: NoAction, map: "FK_Forums_Subscription_CustomerId_Customer_Id")
 
   @@index([CustomerId], map: "IX_Forums_Subscription_CustomerId")
   @@index([ForumId], map: "IX_Forums_Subscription_ForumId")
@@ -668,7 +668,7 @@ model Forums_Subscription {
 
 model Forums_Topic {
   Id                 Int           @id(map: "PK_Forums_Topic") @default(autoincrement())
-  Subject            String        @db.Citext
+  Subject            String        @db.NVarChar(450)
   CustomerId         Int
   ForumId            Int
   TopicTypeId        Int
@@ -676,11 +676,11 @@ model Forums_Topic {
   Views              Int
   LastPostId         Int
   LastPostCustomerId Int
-  LastPostTime       DateTime?     @db.Timestamp(6)
-  CreatedOnUtc       DateTime      @db.Timestamp(6)
-  UpdatedOnUtc       DateTime      @db.Timestamp(6)
+  LastPostTime       DateTime?
+  CreatedOnUtc       DateTime
+  UpdatedOnUtc       DateTime
   Forums_Post        Forums_Post[]
-  Customer           Customer      @relation(fields: [CustomerId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Forums_Topic_CustomerId_Customer_Id")
+  Customer           Customer      @relation(fields: [CustomerId], references: [Id], onUpdate: NoAction, map: "FK_Forums_Topic_CustomerId_Customer_Id")
   Forums_Forum       Forums_Forum  @relation(fields: [ForumId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Forums_Topic_ForumId_Forums_Forum_Id")
 
   @@index([CustomerId], map: "IX_Forums_Topic_CustomerId")
@@ -689,9 +689,9 @@ model Forums_Topic {
 
 model GdprConsent {
   Id                        Int     @id(map: "PK_GdprConsent") @default(autoincrement())
-  Message                   String  @db.Citext
+  Message                   String  @db.NVarChar(Max)
   IsRequired                Boolean
-  RequiredMessage           String? @db.Citext
+  RequiredMessage           String? @db.NVarChar(Max)
   DisplayDuringRegistration Boolean
   DisplayOnCustomerInfoPage Boolean
   DisplayOrder              Int
@@ -701,20 +701,20 @@ model GdprLog {
   Id             Int      @id(map: "PK_GdprLog") @default(autoincrement())
   CustomerId     Int
   ConsentId      Int
-  CustomerInfo   String?  @db.Citext
+  CustomerInfo   String?  @db.NVarChar(Max)
   RequestTypeId  Int
-  RequestDetails String?  @db.Citext
-  CreatedOnUtc   DateTime @db.Timestamp(6)
+  RequestDetails String?  @db.NVarChar(Max)
+  CreatedOnUtc   DateTime
 }
 
 model GenericAttribute {
   Id                      Int       @id(map: "PK_GenericAttribute") @default(autoincrement())
-  KeyGroup                String    @db.Citext
-  Key                     String    @db.Citext
-  Value                   String    @db.Citext
+  KeyGroup                String    @db.NVarChar(400)
+  Key                     String    @db.NVarChar(400)
+  Value                   String    @db.NVarChar(Max)
   EntityId                Int
   StoreId                 Int
-  CreatedOrUpdatedDateUTC DateTime? @db.Timestamp(6)
+  CreatedOrUpdatedDateUTC DateTime?
 
   @@index([EntityId, KeyGroup], map: "IX_GenericAttribute_EntityId_and_KeyGroup")
 }
@@ -725,14 +725,14 @@ model GiftCard {
   GiftCardTypeId           Int
   Amount                   Decimal                @db.Decimal(18, 4)
   IsGiftCardActivated      Boolean
-  GiftCardCouponCode       String?                @db.Citext
-  RecipientName            String?                @db.Citext
-  RecipientEmail           String?                @db.Citext
-  SenderName               String?                @db.Citext
-  SenderEmail              String?                @db.Citext
-  Message                  String?                @db.Citext
+  GiftCardCouponCode       String?                @db.NVarChar(Max)
+  RecipientName            String?                @db.NVarChar(Max)
+  RecipientEmail           String?                @db.NVarChar(Max)
+  SenderName               String?                @db.NVarChar(Max)
+  SenderEmail              String?                @db.NVarChar(Max)
+  Message                  String?                @db.NVarChar(Max)
   IsRecipientNotified      Boolean
-  CreatedOnUtc             DateTime               @db.Timestamp(6)
+  CreatedOnUtc             DateTime
   OrderItem                OrderItem?             @relation(fields: [PurchasedWithOrderItemId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_GiftCard_PurchasedWithOrderItemId_OrderItem_Id")
   GiftCardUsageHistory     GiftCardUsageHistory[]
 
@@ -744,7 +744,7 @@ model GiftCardUsageHistory {
   GiftCardId      Int
   UsedWithOrderId Int
   UsedValue       Decimal  @db.Decimal(18, 4)
-  CreatedOnUtc    DateTime @db.Timestamp(6)
+  CreatedOnUtc    DateTime
   GiftCard        GiftCard @relation(fields: [GiftCardId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_GiftCardUsageHistory_GiftCardId_GiftCard_Id")
   Order           Order    @relation(fields: [UsedWithOrderId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_GiftCardUsageHistory_UsedWithOrderId_Order_Id")
 
@@ -752,18 +752,66 @@ model GiftCardUsageHistory {
   @@index([UsedWithOrderId], map: "IX_GiftCardUsageHistory_UsedWithOrderId")
 }
 
-model GoogleAuthenticatorRecord {
-  Id        Int     @id(map: "PK_GoogleAuthenticatorRecord") @default(autoincrement())
-  Customer  String? @db.Citext
-  SecretKey String? @db.Citext
+model Innovapps_AF_LogAzureFunction {
+  Id              Int      @id(map: "PK_Innovapps_AF_LogAzureFunction") @default(autoincrement())
+  LogLevel        Int
+  ApplicationName String?  @db.NVarChar(Max)
+  Interface       String?  @db.NVarChar(Max)
+  InterfaceMethod String?  @db.NVarChar(Max)
+  Message         String?  @db.NVarChar(Max)
+  IP              String?  @db.NVarChar(Max)
+  CreatedOnUtc    DateTime
+}
+
+model Innovapps_AF_LogAzureFunctionPayload {
+  Id                 Int     @id(map: "PK_Innovapps_AF_LogAzureFunctionPayload") @default(autoincrement())
+  LogAzureFunctionId Int
+  Payload            String? @db.NVarChar(Max)
+}
+
+model Innovapps_PI_Gevis {
+  Id                    Int      @id(map: "PK_Innovapps_PI_Gevis") @default(autoincrement())
+  Nr                    String   @db.NVarChar(100)
+  Hauptlieferantennr    String?  @db.NVarChar(100)
+  Hauptlieferantenname  String?  @db.NVarChar(200)
+  Hauptlieferantenname2 String?  @db.NVarChar(200)
+  Hauptliefartnr        String?  @db.NVarChar(100)
+  FullDataDe            String?  @db.NVarChar(Max)
+  FullDataEn            String?  @db.NVarChar(Max)
+  SyncedOnUtc           DateTime
+  UpdatedOnUtc          DateTime
+  Inaktiv               Int
+  Lagerbestand          Decimal  @db.Decimal(18, 4)
+  Deleted               Boolean
+
+  @@index([Deleted, Hauptliefartnr], map: "nci_wi_Innovapps_PI_Gevis_A23804124CC8CB4D4E6C357D88C1382E")
+}
+
+model Innovapps_PI_Queue {
+  Id                     Int      @id(map: "PK_Innovapps_PI_Queue") @default(autoincrement())
+  FinishedImportUtc      DateTime
+  StartedImportUtc       DateTime
+  MarkedForImportUtc     DateTime
+  ManufacturerPartNumber String   @db.NVarChar(255)
+  ImportStatusId         Int
+  ProductStatusId        Int
+}
+
+model Innovapps_PI_QueueLog {
+  Id           Int      @id(map: "PK_Innovapps_PI_QueueLog") @default(autoincrement())
+  CreatedOnUtc DateTime
+  Message      String   @db.NVarChar(Max)
+  FullMessage  String   @db.NVarChar(Max)
+  LogLevel     Int
+  QueueId      Int
 }
 
 model Language {
   Id                   Int                    @id(map: "PK_Language") @default(autoincrement())
-  Name                 String                 @db.Citext
-  LanguageCulture      String                 @db.Citext
-  UniqueSeoCode        String?                @db.Citext
-  FlagImageFileName    String?                @db.Citext
+  Name                 String                 @db.NVarChar(100)
+  LanguageCulture      String                 @db.NVarChar(20)
+  UniqueSeoCode        String?                @db.NVarChar(2)
+  FlagImageFileName    String?                @db.NVarChar(50)
   Rtl                  Boolean
   LimitedToStores      Boolean
   DefaultCurrencyId    Int
@@ -781,8 +829,8 @@ model Language {
 
 model LocaleStringResource {
   Id            Int      @id(map: "PK_LocaleStringResource") @default(autoincrement())
-  ResourceName  String   @db.Citext
-  ResourceValue String   @db.Citext
+  ResourceName  String   @db.NVarChar(200)
+  ResourceValue String   @db.NVarChar(Max)
   LanguageId    Int
   Language      Language @relation(fields: [LanguageId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_LocaleStringResource_LanguageId_Language_Id")
 
@@ -792,26 +840,27 @@ model LocaleStringResource {
 
 model LocalizedProperty {
   Id             Int      @id(map: "PK_LocalizedProperty") @default(autoincrement())
-  LocaleKeyGroup String   @db.Citext
-  LocaleKey      String   @db.Citext
-  LocaleValue    String   @db.Citext
+  LocaleKeyGroup String   @db.NVarChar(400)
+  LocaleKey      String   @db.NVarChar(400)
+  LocaleValue    String   @db.NVarChar(Max)
   LanguageId     Int
   EntityId       Int
   Language       Language @relation(fields: [LanguageId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_LocalizedProperty_LanguageId_Language_Id")
 
   @@index([LanguageId], map: "IX_LocalizedProperty_LanguageId")
+  @@index([EntityId, LocaleKeyGroup], map: "nci_wi_LocalizedProperty_21F3B25E94AA75484BAC78806AE54006")
 }
 
 model Log {
   Id           Int       @id(map: "PK_Log") @default(autoincrement())
-  ShortMessage String    @db.Citext
-  IpAddress    String?   @db.Citext
+  ShortMessage String    @db.NVarChar(Max)
+  IpAddress    String?   @db.NVarChar(200)
   CustomerId   Int?
   LogLevelId   Int
-  FullMessage  String?   @db.Citext
-  PageUrl      String?   @db.Citext
-  ReferrerUrl  String?   @db.Citext
-  CreatedOnUtc DateTime  @db.Timestamp(6)
+  FullMessage  String?   @db.NVarChar(Max)
+  PageUrl      String?   @db.NVarChar(Max)
+  ReferrerUrl  String?   @db.NVarChar(Max)
+  CreatedOnUtc DateTime
   Customer     Customer? @relation(fields: [CustomerId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Log_CustomerId_Customer_Id")
 
   @@index([CreatedOnUtc(sort: Desc)], map: "IX_Log_CreatedOnUtc")
@@ -820,13 +869,13 @@ model Log {
 
 model Manufacturer {
   Id                              Int                               @id(map: "PK_Manufacturer") @default(autoincrement())
-  Name                            String                            @db.Citext
-  MetaKeywords                    String?                           @db.Citext
-  MetaTitle                       String?                           @db.Citext
-  PageSizeOptions                 String?                           @db.Citext
-  Description                     String?                           @db.Citext
+  Name                            String                            @db.NVarChar(400)
+  MetaKeywords                    String?                           @db.NVarChar(400)
+  MetaTitle                       String?                           @db.NVarChar(400)
+  PageSizeOptions                 String?                           @db.NVarChar(200)
+  Description                     String?                           @db.NVarChar(Max)
   ManufacturerTemplateId          Int
-  MetaDescription                 String?                           @db.Citext
+  MetaDescription                 String?                           @db.NVarChar(Max)
   PictureId                       Int
   PageSize                        Int
   AllowCustomersToSelectPageSize  Boolean
@@ -835,8 +884,8 @@ model Manufacturer {
   Published                       Boolean
   Deleted                         Boolean
   DisplayOrder                    Int
-  CreatedOnUtc                    DateTime                          @db.Timestamp(6)
-  UpdatedOnUtc                    DateTime                          @db.Timestamp(6)
+  CreatedOnUtc                    DateTime
+  UpdatedOnUtc                    DateTime
   PriceRangeFiltering             Boolean
   PriceFrom                       Decimal                           @db.Decimal(18, 4)
   PriceTo                         Decimal                           @db.Decimal(18, 4)
@@ -851,63 +900,62 @@ model Manufacturer {
 
 model ManufacturerTemplate {
   Id           Int    @id(map: "PK_ManufacturerTemplate") @default(autoincrement())
-  Name         String @db.Citext
-  ViewPath     String @db.Citext
+  Name         String @db.NVarChar(400)
+  ViewPath     String @db.NVarChar(400)
   DisplayOrder Int
 }
 
 model MeasureDimension {
   Id            Int     @id(map: "PK_MeasureDimension") @default(autoincrement())
-  Name          String  @db.Citext
-  SystemKeyword String  @db.Citext
+  Name          String  @db.NVarChar(100)
+  SystemKeyword String  @db.NVarChar(100)
   Ratio         Decimal @db.Decimal(18, 8)
   DisplayOrder  Int
 }
 
 model MeasureWeight {
   Id            Int     @id(map: "PK_MeasureWeight") @default(autoincrement())
-  Name          String  @db.Citext
-  SystemKeyword String  @db.Citext
+  Name          String  @db.NVarChar(100)
+  SystemKeyword String  @db.NVarChar(100)
   Ratio         Decimal @db.Decimal(18, 8)
   DisplayOrder  Int
 }
 
 model MessageTemplate {
   Id                 Int     @id(map: "PK_MessageTemplate") @default(autoincrement())
-  Name               String  @db.Citext
-  BccEmailAddresses  String? @db.Citext
-  Subject            String? @db.Citext
+  Name               String  @db.NVarChar(200)
+  BccEmailAddresses  String? @db.NVarChar(200)
+  Subject            String?
   EmailAccountId     Int
-  Body               String? @db.Citext
+  Body               String? @db.NVarChar(Max)
   IsActive           Boolean
   DelayBeforeSend    Int?
   DelayPeriodId      Int
   AttachedDownloadId Int
-  AllowDirectReply   Boolean
   LimitedToStores    Boolean
 }
 
 model MigrationVersionInfo {
-  Version     BigInt    @unique(map: "UC_Version")
-  AppliedOn   DateTime? @db.Timestamp(6)
-  Description String?   @db.Citext
+  Version     BigInt    @unique(map: "UC_Version", clustered: true)
+  AppliedOn   DateTime? @db.DateTime
+  Description String?   @db.NVarChar(1024)
 }
 
 model News {
   Id              Int           @id(map: "PK_News") @default(autoincrement())
-  Title           String        @db.Citext
-  Short           String        @db.Citext
-  Full            String        @db.Citext
-  MetaKeywords    String?       @db.Citext
-  MetaTitle       String?       @db.Citext
+  Title           String        @db.NVarChar(Max)
+  Short           String        @db.NVarChar(Max)
+  Full            String        @db.NVarChar(Max)
+  MetaKeywords    String?       @db.NVarChar(400)
+  MetaTitle       String?       @db.NVarChar(400)
   LanguageId      Int
   Published       Boolean
-  StartDateUtc    DateTime?     @db.Timestamp(6)
-  EndDateUtc      DateTime?     @db.Timestamp(6)
+  StartDateUtc    DateTime?
+  EndDateUtc      DateTime?
   AllowComments   Boolean
   LimitedToStores Boolean
-  MetaDescription String?       @db.Citext
-  CreatedOnUtc    DateTime      @db.Timestamp(6)
+  MetaDescription String?       @db.NVarChar(Max)
+  CreatedOnUtc    DateTime
   Language        Language      @relation(fields: [LanguageId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_News_LanguageId_Language_Id")
   NewsComment     NewsComment[]
 
@@ -919,12 +967,12 @@ model NewsComment {
   CustomerId   Int
   NewsItemId   Int
   StoreId      Int
-  CommentTitle String?  @db.Citext
-  CommentText  String?  @db.Citext
+  CommentTitle String?  @db.NVarChar(Max)
+  CommentText  String?  @db.NVarChar(Max)
   IsApproved   Boolean
-  CreatedOnUtc DateTime @db.Timestamp(6)
+  CreatedOnUtc DateTime
   Customer     Customer @relation(fields: [CustomerId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_NewsComment_CustomerId_Customer_Id")
-  News         News     @relation(fields: [NewsItemId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_NewsComment_NewsItemId_News_Id")
+  News         News     @relation(fields: [NewsItemId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NewsComment_NewsItemId_News_Id")
   Store        Store    @relation(fields: [StoreId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_NewsComment_StoreId_Store_Id")
 
   @@index([CustomerId], map: "IX_NewsComment_CustomerId")
@@ -934,33 +982,33 @@ model NewsComment {
 
 model NewsLetterSubscription {
   Id                         Int      @id(map: "PK_NewsLetterSubscription") @default(autoincrement())
-  Email                      String   @db.Citext
-  NewsLetterSubscriptionGuid String   @db.Uuid
+  Email                      String   @db.NVarChar(255)
+  NewsLetterSubscriptionGuid String   @db.UniqueIdentifier
   Active                     Boolean
   StoreId                    Int
-  CreatedOnUtc               DateTime @db.Timestamp(6)
+  CreatedOnUtc               DateTime
 
   @@index([Email, StoreId], map: "IX_NewsletterSubscription_Email_StoreId")
 }
 
 model Order {
   Id                                       Int                    @id(map: "PK_Order") @default(autoincrement())
-  CustomOrderNumber                        String                 @db.Citext
+  CustomOrderNumber                        String                 @db.NVarChar(Max)
   BillingAddressId                         Int
   CustomerId                               Int
   PickupAddressId                          Int?
   ShippingAddressId                        Int?
-  OrderGuid                                String                 @db.Uuid
+  OrderGuid                                String                 @db.UniqueIdentifier
   StoreId                                  Int
   PickupInStore                            Boolean
   OrderStatusId                            Int
   ShippingStatusId                         Int
   PaymentStatusId                          Int
-  PaymentMethodSystemName                  String?                @db.Citext
-  CustomerCurrencyCode                     String?                @db.Citext
+  PaymentMethodSystemName                  String?                @db.NVarChar(Max)
+  CustomerCurrencyCode                     String?                @db.NVarChar(Max)
   CurrencyRate                             Decimal                @db.Decimal(18, 4)
   CustomerTaxDisplayTypeId                 Int
-  VatNumber                                String?                @db.Citext
+  VatNumber                                String?                @db.NVarChar(Max)
   OrderSubtotalInclTax                     Decimal                @db.Decimal(18, 4)
   OrderSubtotalExclTax                     Decimal                @db.Decimal(18, 4)
   OrderSubTotalDiscountInclTax             Decimal                @db.Decimal(18, 4)
@@ -969,42 +1017,42 @@ model Order {
   OrderShippingExclTax                     Decimal                @db.Decimal(18, 4)
   PaymentMethodAdditionalFeeInclTax        Decimal                @db.Decimal(18, 4)
   PaymentMethodAdditionalFeeExclTax        Decimal                @db.Decimal(18, 4)
-  TaxRates                                 String?                @db.Citext
+  TaxRates                                 String?                @db.NVarChar(Max)
   OrderTax                                 Decimal                @db.Decimal(18, 4)
   OrderDiscount                            Decimal                @db.Decimal(18, 4)
   OrderTotal                               Decimal                @db.Decimal(18, 4)
   RefundedAmount                           Decimal                @db.Decimal(18, 4)
   RewardPointsHistoryEntryId               Int?
-  CheckoutAttributeDescription             String?                @db.Citext
-  CheckoutAttributesXml                    String?                @db.Citext
+  CheckoutAttributeDescription             String?                @db.NVarChar(Max)
+  CheckoutAttributesXml                    String?                @db.NVarChar(Max)
   CustomerLanguageId                       Int
   AffiliateId                              Int
-  CustomerIp                               String?                @db.Citext
+  CustomerIp                               String?                @db.NVarChar(Max)
   AllowStoringCreditCardNumber             Boolean
-  CardType                                 String?                @db.Citext
-  CardName                                 String?                @db.Citext
-  CardNumber                               String?                @db.Citext
-  MaskedCreditCardNumber                   String?                @db.Citext
-  CardCvv2                                 String?                @db.Citext
-  CardExpirationMonth                      String?                @db.Citext
-  CardExpirationYear                       String?                @db.Citext
-  AuthorizationTransactionId               String?                @db.Citext
-  AuthorizationTransactionCode             String?                @db.Citext
-  AuthorizationTransactionResult           String?                @db.Citext
-  CaptureTransactionId                     String?                @db.Citext
-  CaptureTransactionResult                 String?                @db.Citext
-  SubscriptionTransactionId                String?                @db.Citext
-  PaidDateUtc                              DateTime?              @db.Timestamp(6)
-  ShippingMethod                           String?                @db.Citext
-  ShippingRateComputationMethodSystemName  String?                @db.Citext
-  CustomValuesXml                          String?                @db.Citext
+  CardType                                 String?                @db.NVarChar(Max)
+  CardName                                 String?                @db.NVarChar(Max)
+  CardNumber                               String?                @db.NVarChar(Max)
+  MaskedCreditCardNumber                   String?                @db.NVarChar(Max)
+  CardCvv2                                 String?                @db.NVarChar(Max)
+  CardExpirationMonth                      String?                @db.NVarChar(Max)
+  CardExpirationYear                       String?                @db.NVarChar(Max)
+  AuthorizationTransactionId               String?                @db.NVarChar(Max)
+  AuthorizationTransactionCode             String?                @db.NVarChar(Max)
+  AuthorizationTransactionResult           String?                @db.NVarChar(Max)
+  CaptureTransactionId                     String?                @db.NVarChar(Max)
+  CaptureTransactionResult                 String?                @db.NVarChar(Max)
+  SubscriptionTransactionId                String?                @db.NVarChar(Max)
+  PaidDateUtc                              DateTime?
+  ShippingMethod                           String?                @db.NVarChar(Max)
+  ShippingRateComputationMethodSystemName  String?                @db.NVarChar(Max)
+  CustomValuesXml                          String?                @db.NVarChar(Max)
   Deleted                                  Boolean
-  CreatedOnUtc                             DateTime               @db.Timestamp(6)
+  CreatedOnUtc                             DateTime
   RedeemedRewardPointsEntryId              Int?
   DiscountUsageHistory                     DiscountUsageHistory[]
   GiftCardUsageHistory                     GiftCardUsageHistory[]
-  Address_Order_BillingAddressIdToAddress  Address                @relation("Order_BillingAddressIdToAddress", fields: [BillingAddressId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Order_BillingAddressId_Address_Id")
-  Customer                                 Customer               @relation(fields: [CustomerId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Order_CustomerId_Customer_Id")
+  Address_Order_BillingAddressIdToAddress  Address                @relation("Order_BillingAddressIdToAddress", fields: [BillingAddressId], references: [Id], onUpdate: NoAction, map: "FK_Order_BillingAddressId_Address_Id")
+  Customer                                 Customer               @relation(fields: [CustomerId], references: [Id], onUpdate: NoAction, map: "FK_Order_CustomerId_Customer_Id")
   Address_Order_PickupAddressIdToAddress   Address?               @relation("Order_PickupAddressIdToAddress", fields: [PickupAddressId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Order_PickupAddressId_Address_Id")
   RewardPointsHistory                      RewardPointsHistory?   @relation(fields: [RewardPointsHistoryEntryId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Order_RewardPointsHistoryEntryId_RewardPointsHistory_Id")
   Address_Order_ShippingAddressIdToAddress Address?               @relation("Order_ShippingAddressIdToAddress", fields: [ShippingAddressId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_Order_ShippingAddressId_Address_Id")
@@ -1024,7 +1072,7 @@ model OrderItem {
   Id                    Int        @id(map: "PK_OrderItem") @default(autoincrement())
   OrderId               Int
   ProductId             Int
-  OrderItemGuid         String     @db.Uuid
+  OrderItemGuid         String     @db.UniqueIdentifier
   Quantity              Int
   UnitPriceInclTax      Decimal    @db.Decimal(18, 4)
   UnitPriceExclTax      Decimal    @db.Decimal(18, 4)
@@ -1033,14 +1081,14 @@ model OrderItem {
   DiscountAmountInclTax Decimal    @db.Decimal(18, 4)
   DiscountAmountExclTax Decimal    @db.Decimal(18, 4)
   OriginalProductCost   Decimal    @db.Decimal(18, 4)
-  AttributeDescription  String?    @db.Citext
-  AttributesXml         String?    @db.Citext
+  AttributeDescription  String?    @db.NVarChar(Max)
+  AttributesXml         String?    @db.NVarChar(Max)
   DownloadCount         Int
   IsDownloadActivated   Boolean
   LicenseDownloadId     Int?
   ItemWeight            Decimal?   @db.Decimal(18, 4)
-  RentalStartDateUtc    DateTime?  @db.Timestamp(6)
-  RentalEndDateUtc      DateTime?  @db.Timestamp(6)
+  RentalStartDateUtc    DateTime?
+  RentalEndDateUtc      DateTime?
   GiftCard              GiftCard[]
   Order                 Order      @relation(fields: [OrderId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_OrderItem_OrderId_Order_Id")
   Product               Product    @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_OrderItem_ProductId_Product_Id")
@@ -1051,29 +1099,40 @@ model OrderItem {
 
 model OrderNote {
   Id                Int      @id(map: "PK_OrderNote") @default(autoincrement())
-  Note              String   @db.Citext
+  Note              String   @db.NVarChar(Max)
   OrderId           Int
   DownloadId        Int
   DisplayToCustomer Boolean
-  CreatedOnUtc      DateTime @db.Timestamp(6)
+  CreatedOnUtc      DateTime
   Order             Order    @relation(fields: [OrderId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_OrderNote_OrderId_Order_Id")
 
   @@index([OrderId], map: "IX_OrderNote_OrderId")
 }
 
+model PaymentDirector {
+  Id                     Int     @id(map: "PK_PaymentDirector") @default(autoincrement())
+  EvalOrder              Int
+  Active                 Boolean
+  EvalType               String? @db.NVarChar(255)
+  Name                   String? @db.NVarChar(255)
+  Expression             String? @db.NVarChar(Max)
+  FeeExpression          String? @db.NVarChar(Max)
+  FriendlyNameExpression String? @db.NVarChar(Max)
+}
+
 model PermissionRecord {
   Id                            Int                             @id(map: "PK_PermissionRecord") @default(autoincrement())
-  Name                          String                          @db.Citext
-  SystemName                    String                          @db.Citext
-  Category                      String                          @db.Citext
+  Name                          String                          @db.NVarChar(Max)
+  SystemName                    String                          @db.NVarChar(255)
+  Category                      String                          @db.NVarChar(255)
   PermissionRecord_Role_Mapping PermissionRecord_Role_Mapping[]
 }
 
 model PermissionRecord_Role_Mapping {
   PermissionRecord_Id Int
   CustomerRole_Id     Int
-  CustomerRole        CustomerRole     @relation(fields: [CustomerRole_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_PermissionRecord_Role_Mapping_CustomerRole_Id_CustomerRole_I")
-  PermissionRecord    PermissionRecord @relation(fields: [PermissionRecord_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_PermissionRecord_Role_Mapping_PermissionRecord_Id_Permission")
+  CustomerRole        CustomerRole     @relation(fields: [CustomerRole_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_PermissionRecord_Role_Mapping_CustomerRole_Id_CustomerRole_Id")
+  PermissionRecord    PermissionRecord @relation(fields: [PermissionRecord_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_PermissionRecord_Role_Mapping_PermissionRecord_Id_PermissionRecord_Id")
 
   @@id([PermissionRecord_Id, CustomerRole_Id], map: "PK_PermissionRecord_Role_Mapping")
   @@index([CustomerRole_Id], map: "IX_PermissionRecord_Role_Mapping_CustomerRole_Id")
@@ -1082,12 +1141,12 @@ model PermissionRecord_Role_Mapping {
 
 model Picture {
   Id                      Int                       @id(map: "PK_Picture") @default(autoincrement())
-  MimeType                String                    @db.Citext
-  SeoFilename             String?                   @db.Citext
-  AltAttribute            String?                   @db.Citext
-  TitleAttribute          String?                   @db.Citext
+  MimeType                String                    @db.NVarChar(40)
+  SeoFilename             String?                   @db.NVarChar(300)
+  AltAttribute            String?                   @db.NVarChar(Max)
+  TitleAttribute          String?                   @db.NVarChar(Max)
   IsNew                   Boolean
-  VirtualPath             String?                   @db.Citext
+  VirtualPath             String?                   @db.NVarChar(Max)
   PictureBinary           PictureBinary[]
   Product_Picture_Mapping Product_Picture_Mapping[]
 }
@@ -1103,16 +1162,16 @@ model PictureBinary {
 
 model Poll {
   Id                Int          @id(map: "PK_Poll") @default(autoincrement())
-  Name              String       @db.Citext
+  Name              String       @db.NVarChar(Max)
   LanguageId        Int
-  SystemKeyword     String?      @db.Citext
+  SystemKeyword     String?      @db.NVarChar(Max)
   Published         Boolean
   ShowOnHomepage    Boolean
   AllowGuestsToVote Boolean
   DisplayOrder      Int
   LimitedToStores   Boolean
-  StartDateUtc      DateTime?    @db.Timestamp(6)
-  EndDateUtc        DateTime?    @db.Timestamp(6)
+  StartDateUtc      DateTime?
+  EndDateUtc        DateTime?
   Language          Language     @relation(fields: [LanguageId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Poll_LanguageId_Language_Id")
   PollAnswer        PollAnswer[]
 
@@ -1121,7 +1180,7 @@ model Poll {
 
 model PollAnswer {
   Id               Int                @id(map: "PK_PollAnswer") @default(autoincrement())
-  Name             String             @db.Citext
+  Name             String             @db.NVarChar(Max)
   PollId           Int
   NumberOfVotes    Int
   DisplayOrder     Int
@@ -1135,8 +1194,8 @@ model PollVotingRecord {
   Id           Int        @id(map: "PK_PollVotingRecord") @default(autoincrement())
   PollAnswerId Int
   CustomerId   Int
-  CreatedOnUtc DateTime   @db.Timestamp(6)
-  Customer     Customer   @relation(fields: [CustomerId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_PollVotingRecord_CustomerId_Customer_Id")
+  CreatedOnUtc DateTime
+  Customer     Customer   @relation(fields: [CustomerId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_PollVotingRecord_CustomerId_Customer_Id")
   PollAnswer   PollAnswer @relation(fields: [PollAnswerId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_PollVotingRecord_PollAnswerId_PollAnswer_Id")
 
   @@index([CustomerId], map: "IX_PollVotingRecord_CustomerId")
@@ -1145,7 +1204,7 @@ model PollVotingRecord {
 
 model PredefinedProductAttributeValue {
   Id                           Int              @id(map: "PK_PredefinedProductAttributeValue") @default(autoincrement())
-  Name                         String           @db.Citext
+  Name                         String           @db.NVarChar(400)
   ProductAttributeId           Int
   PriceAdjustment              Decimal          @db.Decimal(18, 4)
   PriceAdjustmentUsePercentage Boolean
@@ -1153,31 +1212,31 @@ model PredefinedProductAttributeValue {
   Cost                         Decimal          @db.Decimal(18, 4)
   IsPreSelected                Boolean
   DisplayOrder                 Int
-  ProductAttribute             ProductAttribute @relation(fields: [ProductAttributeId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_PredefinedProductAttributeValue_ProductAttributeId_ProductAt")
+  ProductAttribute             ProductAttribute @relation(fields: [ProductAttributeId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_PredefinedProductAttributeValue_ProductAttributeId_ProductAttribute_Id")
 
   @@index([ProductAttributeId], map: "IX_PredefinedProductAttributeValue_ProductAttributeId")
 }
 
 model Product {
   Id                                                     Int                                      @id(map: "PK_Product") @default(autoincrement())
-  Name                                                   String                                   @db.Citext
-  MetaKeywords                                           String?                                  @db.Citext
-  MetaTitle                                              String?                                  @db.Citext
-  Sku                                                    String?                                  @db.Citext
-  ManufacturerPartNumber                                 String?                                  @db.Citext
-  Gtin                                                   String?                                  @db.Citext
-  RequiredProductIds                                     String?                                  @db.Citext
-  AllowedQuantities                                      String?                                  @db.Citext
+  Name                                                   String                                   @db.NVarChar(400)
+  MetaKeywords                                           String?                                  @db.NVarChar(400)
+  MetaTitle                                              String?                                  @db.NVarChar(400)
+  Sku                                                    String?                                  @db.NVarChar(400)
+  ManufacturerPartNumber                                 String?                                  @db.NVarChar(400)
+  Gtin                                                   String?                                  @db.NVarChar(400)
+  RequiredProductIds                                     String?
+  AllowedQuantities                                      String?
   ProductTypeId                                          Int
   ParentGroupedProductId                                 Int
   VisibleIndividually                                    Boolean
-  ShortDescription                                       String?                                  @db.Citext
-  FullDescription                                        String?                                  @db.Citext
-  AdminComment                                           String?                                  @db.Citext
+  ShortDescription                                       String?                                  @db.NVarChar(Max)
+  FullDescription                                        String?                                  @db.NVarChar(Max)
+  AdminComment                                           String?                                  @db.NVarChar(Max)
   ProductTemplateId                                      Int
   VendorId                                               Int
   ShowOnHomepage                                         Boolean
-  MetaDescription                                        String?                                  @db.Citext
+  MetaDescription                                        String?                                  @db.NVarChar(Max)
   AllowCustomerReviews                                   Boolean
   ApprovedRatingSum                                      Int
   NotApprovedRatingSum                                   Int
@@ -1199,7 +1258,7 @@ model Product {
   HasSampleDownload                                      Boolean
   SampleDownloadId                                       Int
   HasUserAgreement                                       Boolean
-  UserAgreementText                                      String?                                  @db.Citext
+  UserAgreementText                                      String?                                  @db.NVarChar(Max)
   IsRecurring                                            Boolean
   RecurringCycleLength                                   Int
   RecurringCyclePeriodId                                 Int
@@ -1230,12 +1289,11 @@ model Product {
   OrderMinimumQuantity                                   Int
   OrderMaximumQuantity                                   Int
   AllowAddingOnlyExistingAttributeCombinations           Boolean
-  DisplayAttributeCombinationImagesOnly                  Boolean
   NotReturnable                                          Boolean
   DisableBuyButton                                       Boolean
   DisableWishlistButton                                  Boolean
   AvailableForPreOrder                                   Boolean
-  PreOrderAvailabilityStartDateTimeUtc                   DateTime?                                @db.Timestamp(6)
+  PreOrderAvailabilityStartDateTimeUtc                   DateTime?
   CallForPrice                                           Boolean
   Price                                                  Decimal                                  @db.Decimal(18, 4)
   OldPrice                                               Decimal                                  @db.Decimal(18, 4)
@@ -1249,34 +1307,34 @@ model Product {
   BasepriceBaseAmount                                    Decimal                                  @db.Decimal(18, 4)
   BasepriceBaseUnitId                                    Int
   MarkAsNew                                              Boolean
-  MarkAsNewStartDateTimeUtc                              DateTime?                                @db.Timestamp(6)
-  MarkAsNewEndDateTimeUtc                                DateTime?                                @db.Timestamp(6)
+  MarkAsNewStartDateTimeUtc                              DateTime?
+  MarkAsNewEndDateTimeUtc                                DateTime?
   HasTierPrices                                          Boolean
   HasDiscountsApplied                                    Boolean
   Weight                                                 Decimal                                  @db.Decimal(18, 4)
   Length                                                 Decimal                                  @db.Decimal(18, 4)
   Width                                                  Decimal                                  @db.Decimal(18, 4)
   Height                                                 Decimal                                  @db.Decimal(18, 4)
-  AvailableStartDateTimeUtc                              DateTime?                                @db.Timestamp(6)
-  AvailableEndDateTimeUtc                                DateTime?                                @db.Timestamp(6)
+  AvailableStartDateTimeUtc                              DateTime?
+  AvailableEndDateTimeUtc                                DateTime?
   DisplayOrder                                           Int
   Published                                              Boolean
   Deleted                                                Boolean
-  CreatedOnUtc                                           DateTime                                 @db.Timestamp(6)
-  UpdatedOnUtc                                           DateTime                                 @db.Timestamp(6)
+  CreatedOnUtc                                           DateTime
+  UpdatedOnUtc                                           DateTime
   BackInStockSubscription                                BackInStockSubscription[]
   Discount_AppliedToProducts                             Discount_AppliedToProducts[]
   OrderItem                                              OrderItem[]
-  ProductAttributeCombination                            ProductAttributeCombination[]
-  ProductReview                                          ProductReview[]
-  ProductVideo                                           ProductVideo[]
-  ProductWarehouseInventory                              ProductWarehouseInventory[]
   Product_Category_Mapping                               Product_Category_Mapping[]
   Product_Manufacturer_Mapping                           Product_Manufacturer_Mapping[]
   Product_Picture_Mapping                                Product_Picture_Mapping[]
   Product_ProductAttribute_Mapping                       Product_ProductAttribute_Mapping[]
   Product_ProductTag_Mapping                             Product_ProductTag_Mapping[]
   Product_SpecificationAttribute_Mapping                 Product_SpecificationAttribute_Mapping[]
+  ProductAttributeCombination                            ProductAttributeCombination[]
+  ProductReview                                          ProductReview[]
+  ProductVideo                                           ProductVideo[]
+  ProductWarehouseInventory                              ProductWarehouseInventory[]
   ShoppingCartItem                                       ShoppingCartItem[]
   StockQuantityHistory                                   StockQuantityHistory[]
   TierPrice                                              TierPrice[]
@@ -1294,45 +1352,132 @@ model Product {
   @@index([VisibleIndividually, Published, Deleted], map: "IX_Product_VisibleIndividually_Published_Deleted_Extended")
 }
 
+model Product_Category_Mapping {
+  Id                Int      @id(map: "PK_Product_Category_Mapping") @default(autoincrement())
+  CategoryId        Int
+  ProductId         Int
+  IsFeaturedProduct Boolean
+  DisplayOrder      Int
+  Category          Category @relation(fields: [CategoryId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_Category_Mapping_CategoryId_Category_Id")
+  Product           Product  @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_Category_Mapping_ProductId_Product_Id")
+
+  @@index([CategoryId, ProductId], map: "IX_PCM_Product_and_Category")
+  @@index([ProductId, IsFeaturedProduct], map: "IX_PCM_ProductId_Extended")
+  @@index([CategoryId], map: "IX_Product_Category_Mapping_CategoryId")
+  @@index([IsFeaturedProduct], map: "IX_Product_Category_Mapping_IsFeaturedProduct")
+  @@index([ProductId], map: "IX_Product_Category_Mapping_ProductId")
+}
+
+model Product_Manufacturer_Mapping {
+  Id                Int          @id(map: "PK_Product_Manufacturer_Mapping") @default(autoincrement())
+  ManufacturerId    Int
+  ProductId         Int
+  IsFeaturedProduct Boolean
+  DisplayOrder      Int
+  Manufacturer      Manufacturer @relation(fields: [ManufacturerId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_Manufacturer_Mapping_ManufacturerId_Manufacturer_Id")
+  Product           Product      @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_Manufacturer_Mapping_ProductId_Product_Id")
+
+  @@index([ManufacturerId, ProductId], map: "IX_PMM_Product_and_Manufacturer")
+  @@index([ProductId, IsFeaturedProduct], map: "IX_PMM_ProductId_Extended")
+  @@index([IsFeaturedProduct], map: "IX_Product_Manufacturer_Mapping_IsFeaturedProduct")
+  @@index([ManufacturerId], map: "IX_Product_Manufacturer_Mapping_ManufacturerId")
+  @@index([ProductId], map: "IX_Product_Manufacturer_Mapping_ProductId")
+}
+
+model Product_Picture_Mapping {
+  Id           Int     @id(map: "PK_Product_Picture_Mapping") @default(autoincrement())
+  PictureId    Int
+  ProductId    Int
+  DisplayOrder Int
+  Picture      Picture @relation(fields: [PictureId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_Picture_Mapping_PictureId_Picture_Id")
+  Product      Product @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_Picture_Mapping_ProductId_Product_Id")
+
+  @@index([PictureId], map: "IX_Product_Picture_Mapping_PictureId")
+  @@index([ProductId], map: "IX_Product_Picture_Mapping_ProductId")
+}
+
+model Product_ProductAttribute_Mapping {
+  Id                              Int                     @id(map: "PK_Product_ProductAttribute_Mapping") @default(autoincrement())
+  ProductAttributeId              Int
+  ProductId                       Int
+  TextPrompt                      String?                 @db.NVarChar(Max)
+  IsRequired                      Boolean
+  AttributeControlTypeId          Int
+  DisplayOrder                    Int
+  ValidationMinLength             Int?
+  ValidationMaxLength             Int?
+  ValidationFileAllowedExtensions String?                 @db.NVarChar(Max)
+  ValidationFileMaximumSize       Int?
+  DefaultValue                    String?                 @db.NVarChar(Max)
+  ConditionAttributeXml           String?                 @db.NVarChar(Max)
+  ProductAttribute                ProductAttribute        @relation(fields: [ProductAttributeId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_ProductAttribute_Mapping_ProductAttributeId_ProductAttribute_Id")
+  Product                         Product                 @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_ProductAttribute_Mapping_ProductId_Product_Id")
+  ProductAttributeValue           ProductAttributeValue[]
+
+  @@index([ProductAttributeId], map: "IX_Product_ProductAttribute_Mapping_ProductAttributeId")
+  @@index([ProductId], map: "IX_Product_ProductAttribute_Mapping_ProductId")
+  @@index([ProductId, DisplayOrder], map: "IX_Product_ProductAttribute_Mapping_ProductId_DisplayOrder")
+}
+
+model Product_ProductTag_Mapping {
+  Product_Id    Int
+  ProductTag_Id Int
+  Product       Product    @relation(fields: [Product_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_ProductTag_Mapping_Product_Id_Product_Id")
+  ProductTag    ProductTag @relation(fields: [ProductTag_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_ProductTag_Mapping_ProductTag_Id_ProductTag_Id")
+
+  @@id([Product_Id, ProductTag_Id], map: "PK_Product_ProductTag_Mapping")
+  @@index([Product_Id], map: "IX_Product_ProductTag_Mapping_Product_Id")
+  @@index([ProductTag_Id], map: "IX_Product_ProductTag_Mapping_ProductTag_Id")
+}
+
+model Product_SpecificationAttribute_Mapping {
+  Id                             Int                          @id(map: "PK_Product_SpecificationAttribute_Mapping") @default(autoincrement())
+  CustomValue                    String?                      @db.NVarChar(4000)
+  ProductId                      Int
+  SpecificationAttributeOptionId Int
+  AttributeTypeId                Int
+  AllowFiltering                 Boolean
+  ShowOnProductPage              Boolean
+  DisplayOrder                   Int
+  Product                        Product                      @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_SpecificationAttribute_Mapping_ProductId_Product_Id")
+  SpecificationAttributeOption   SpecificationAttributeOption @relation(fields: [SpecificationAttributeOptionId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_SpecificationAttribute_Mapping_SpecificationAttributeOptionId_SpecificationAttributeOption_Id")
+
+  @@index([ProductId], map: "IX_Product_SpecificationAttribute_Mapping_ProductId")
+  @@index([SpecificationAttributeOptionId], map: "IX_Product_SpecificationAttribute_Mapping_SpecificationAttributeOptionId")
+  @@index([AllowFiltering], map: "IX_PSAM_AllowFiltering")
+  @@index([SpecificationAttributeOptionId, AllowFiltering], map: "IX_PSAM_SpecificationAttributeOptionId_AllowFiltering")
+}
+
 model ProductAttribute {
   Id                               Int                                @id(map: "PK_ProductAttribute") @default(autoincrement())
-  Name                             String                             @db.Citext
-  Description                      String?                            @db.Citext
+  Name                             String                             @db.NVarChar(Max)
+  Description                      String?                            @db.NVarChar(Max)
   PredefinedProductAttributeValue  PredefinedProductAttributeValue[]
   Product_ProductAttribute_Mapping Product_ProductAttribute_Mapping[]
 }
 
 model ProductAttributeCombination {
-  Id                                 Int                                  @id(map: "PK_ProductAttributeCombination") @default(autoincrement())
-  Sku                                String?                              @db.Citext
-  ManufacturerPartNumber             String?                              @db.Citext
-  Gtin                               String?                              @db.Citext
-  ProductId                          Int
-  AttributesXml                      String?                              @db.Citext
-  StockQuantity                      Int
-  AllowOutOfStockOrders              Boolean
-  OverriddenPrice                    Decimal?                             @db.Decimal(18, 4)
-  NotifyAdminForQuantityBelow        Int
-  MinStockQuantity                   Int
-  Product                            Product                              @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ProductAttributeCombination_ProductId_Product_Id")
-  ProductAttributeCombinationPicture ProductAttributeCombinationPicture[]
+  Id                          Int      @id(map: "PK_ProductAttributeCombination") @default(autoincrement())
+  Sku                         String?  @db.NVarChar(400)
+  ManufacturerPartNumber      String?  @db.NVarChar(400)
+  Gtin                        String?  @db.NVarChar(400)
+  ProductId                   Int
+  AttributesXml               String?  @db.NVarChar(Max)
+  StockQuantity               Int
+  AllowOutOfStockOrders       Boolean
+  OverriddenPrice             Decimal? @db.Decimal(18, 4)
+  NotifyAdminForQuantityBelow Int
+  PictureId                   Int
+  MinStockQuantity            Int
+  Product                     Product  @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ProductAttributeCombination_ProductId_Product_Id")
 
   @@index([ProductId], map: "IX_ProductAttributeCombination_ProductId")
 }
 
-model ProductAttributeCombinationPicture {
-  Id                            Int                         @id(map: "PK_ProductAttributeCombinationPicture") @default(autoincrement())
-  ProductAttributeCombinationId Int
-  PictureId                     Int
-  ProductAttributeCombination   ProductAttributeCombination @relation(fields: [ProductAttributeCombinationId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ProductAttributeCombinationPicture_ProductAttributeCombinati")
-
-  @@index([ProductAttributeCombinationId], map: "IX_ProductAttributeCombinationPicture_ProductAttributeCombinati")
-}
-
 model ProductAttributeValue {
   Id                               Int                              @id(map: "PK_ProductAttributeValue") @default(autoincrement())
-  Name                             String                           @db.Citext
-  ColorSquaresRgb                  String?                          @db.Citext
+  Name                             String                           @db.NVarChar(400)
+  ColorSquaresRgb                  String?                          @db.NVarChar(100)
   ProductAttributeMappingId        Int
   AttributeValueTypeId             Int
   AssociatedProductId              Int
@@ -1345,25 +1490,16 @@ model ProductAttributeValue {
   Quantity                         Int
   IsPreSelected                    Boolean
   DisplayOrder                     Int
-  Product_ProductAttribute_Mapping Product_ProductAttribute_Mapping @relation(fields: [ProductAttributeMappingId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ProductAttributeValue_ProductAttributeMappingId_Product_Prod")
-  ProductAttributeValuePicture     ProductAttributeValuePicture[]
+  PictureId                        Int
+  Product_ProductAttribute_Mapping Product_ProductAttribute_Mapping @relation(fields: [ProductAttributeMappingId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ProductAttributeValue_ProductAttributeMappingId_Product_ProductAttribute_Mapping_Id")
 
   @@index([ProductAttributeMappingId], map: "IX_ProductAttributeValue_ProductAttributeMappingId")
   @@index([ProductAttributeMappingId, DisplayOrder], map: "IX_ProductAttributeValue_ProductAttributeMappingId_DisplayOrder")
 }
 
-model ProductAttributeValuePicture {
-  Id                      Int                   @id(map: "PK_ProductAttributeValuePicture") @default(autoincrement())
-  ProductAttributeValueId Int
-  PictureId               Int
-  ProductAttributeValue   ProductAttributeValue @relation(fields: [ProductAttributeValueId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ProductAttributeValuePicture_ProductAttributeValueId_Product")
-
-  @@index([ProductAttributeValueId], map: "IX_ProductAttributeValuePicture_ProductAttributeValueId")
-}
-
 model ProductAvailabilityRange {
   Id           Int    @id(map: "PK_ProductAvailabilityRange") @default(autoincrement())
-  Name         String @db.Citext
+  Name         String @db.NVarChar(400)
   DisplayOrder Int
 }
 
@@ -1373,23 +1509,35 @@ model ProductReview {
   ProductId                        Int
   StoreId                          Int
   IsApproved                       Boolean
-  Title                            String?                            @db.Citext
-  ReviewText                       String?                            @db.Citext
-  ReplyText                        String?                            @db.Citext
+  Title                            String?                            @db.NVarChar(Max)
+  ReviewText                       String?                            @db.NVarChar(Max)
+  ReplyText                        String?                            @db.NVarChar(Max)
   CustomerNotifiedOfReply          Boolean
   Rating                           Int
   HelpfulYesTotal                  Int
   HelpfulNoTotal                   Int
-  CreatedOnUtc                     DateTime                           @db.Timestamp(6)
+  CreatedOnUtc                     DateTime
   Customer                         Customer                           @relation(fields: [CustomerId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ProductReview_CustomerId_Customer_Id")
   Product                          Product                            @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ProductReview_ProductId_Product_Id")
   Store                            Store                              @relation(fields: [StoreId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ProductReview_StoreId_Store_Id")
-  ProductReviewHelpfulness         ProductReviewHelpfulness[]
   ProductReview_ReviewType_Mapping ProductReview_ReviewType_Mapping[]
+  ProductReviewHelpfulness         ProductReviewHelpfulness[]
 
   @@index([CustomerId], map: "IX_ProductReview_CustomerId")
   @@index([ProductId], map: "IX_ProductReview_ProductId")
   @@index([StoreId], map: "IX_ProductReview_StoreId")
+}
+
+model ProductReview_ReviewType_Mapping {
+  Id              Int           @id(map: "PK_ProductReview_ReviewType_Mapping") @default(autoincrement())
+  ProductReviewId Int
+  ReviewTypeId    Int
+  Rating          Int
+  ProductReview   ProductReview @relation(fields: [ProductReviewId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ProductReview_ReviewType_Mapping_ProductReviewId_ProductReview_Id")
+  ReviewType      ReviewType    @relation(fields: [ReviewTypeId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ProductReview_ReviewType_Mapping_ReviewTypeId_ReviewType_Id")
+
+  @@index([ProductReviewId], map: "IX_ProductReview_ReviewType_Mapping_ProductReviewId")
+  @@index([ReviewTypeId], map: "IX_ProductReview_ReviewType_Mapping_ReviewTypeId")
 }
 
 model ProductReviewHelpfulness {
@@ -1402,21 +1550,9 @@ model ProductReviewHelpfulness {
   @@index([ProductReviewId], map: "IX_ProductReviewHelpfulness_ProductReviewId")
 }
 
-model ProductReview_ReviewType_Mapping {
-  Id              Int           @id(map: "PK_ProductReview_ReviewType_Mapping") @default(autoincrement())
-  ProductReviewId Int
-  ReviewTypeId    Int
-  Rating          Int
-  ProductReview   ProductReview @relation(fields: [ProductReviewId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ProductReview_ReviewType_Mapping_ProductReviewId_ProductRevi")
-  ReviewType      ReviewType    @relation(fields: [ReviewTypeId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ProductReview_ReviewType_Mapping_ReviewTypeId_ReviewType_Id")
-
-  @@index([ProductReviewId], map: "IX_ProductReview_ReviewType_Mapping_ProductReviewId")
-  @@index([ReviewTypeId], map: "IX_ProductReview_ReviewType_Mapping_ReviewTypeId")
-}
-
 model ProductTag {
   Id                         Int                          @id(map: "PK_ProductTag") @default(autoincrement())
-  Name                       String                       @db.Citext
+  Name                       String                       @db.NVarChar(400)
   Product_ProductTag_Mapping Product_ProductTag_Mapping[]
 
   @@index([Name], map: "IX_ProductTag_Name")
@@ -1424,10 +1560,10 @@ model ProductTag {
 
 model ProductTemplate {
   Id                  Int     @id(map: "PK_ProductTemplate") @default(autoincrement())
-  Name                String  @db.Citext
-  ViewPath            String  @db.Citext
+  Name                String  @db.NVarChar(400)
+  ViewPath            String  @db.NVarChar(400)
   DisplayOrder        Int
-  IgnoredProductTypes String? @db.Citext
+  IgnoredProductTypes String? @db.NVarChar(Max)
 }
 
 model ProductVideo {
@@ -1455,123 +1591,27 @@ model ProductWarehouseInventory {
   @@index([WarehouseId], map: "IX_ProductWarehouseInventory_WarehouseId")
 }
 
-model Product_Category_Mapping {
-  Id                Int      @id(map: "PK_Product_Category_Mapping") @default(autoincrement())
-  CategoryId        Int
-  ProductId         Int
-  IsFeaturedProduct Boolean
-  DisplayOrder      Int
-  Category          Category @relation(fields: [CategoryId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_Category_Mapping_CategoryId_Category_Id")
-  Product           Product  @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_Category_Mapping_ProductId_Product_Id")
-
-  @@index([ProductId, IsFeaturedProduct], map: "IX_PCM_ProductId_Extended")
-  @@index([CategoryId, ProductId], map: "IX_PCM_Product_and_Category")
-  @@index([CategoryId], map: "IX_Product_Category_Mapping_CategoryId")
-  @@index([IsFeaturedProduct], map: "IX_Product_Category_Mapping_IsFeaturedProduct")
-  @@index([ProductId], map: "IX_Product_Category_Mapping_ProductId")
-}
-
-model Product_Manufacturer_Mapping {
-  Id                Int          @id(map: "PK_Product_Manufacturer_Mapping") @default(autoincrement())
-  ManufacturerId    Int
-  ProductId         Int
-  IsFeaturedProduct Boolean
-  DisplayOrder      Int
-  Manufacturer      Manufacturer @relation(fields: [ManufacturerId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_Manufacturer_Mapping_ManufacturerId_Manufacturer_Id")
-  Product           Product      @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_Manufacturer_Mapping_ProductId_Product_Id")
-
-  @@index([ProductId, IsFeaturedProduct], map: "IX_PMM_ProductId_Extended")
-  @@index([ManufacturerId, ProductId], map: "IX_PMM_Product_and_Manufacturer")
-  @@index([IsFeaturedProduct], map: "IX_Product_Manufacturer_Mapping_IsFeaturedProduct")
-  @@index([ManufacturerId], map: "IX_Product_Manufacturer_Mapping_ManufacturerId")
-  @@index([ProductId], map: "IX_Product_Manufacturer_Mapping_ProductId")
-}
-
-model Product_Picture_Mapping {
-  Id           Int     @id(map: "PK_Product_Picture_Mapping") @default(autoincrement())
-  PictureId    Int
-  ProductId    Int
-  DisplayOrder Int
-  Picture      Picture @relation(fields: [PictureId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_Picture_Mapping_PictureId_Picture_Id")
-  Product      Product @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_Picture_Mapping_ProductId_Product_Id")
-
-  @@index([PictureId], map: "IX_Product_Picture_Mapping_PictureId")
-  @@index([ProductId], map: "IX_Product_Picture_Mapping_ProductId")
-}
-
-model Product_ProductAttribute_Mapping {
-  Id                              Int                     @id(map: "PK_Product_ProductAttribute_Mapping") @default(autoincrement())
-  ProductAttributeId              Int
-  ProductId                       Int
-  TextPrompt                      String?                 @db.Citext
-  IsRequired                      Boolean
-  AttributeControlTypeId          Int
-  DisplayOrder                    Int
-  ValidationMinLength             Int?
-  ValidationMaxLength             Int?
-  ValidationFileAllowedExtensions String?                 @db.Citext
-  ValidationFileMaximumSize       Int?
-  DefaultValue                    String?                 @db.Citext
-  ConditionAttributeXml           String?                 @db.Citext
-  ProductAttributeValue           ProductAttributeValue[]
-  ProductAttribute                ProductAttribute        @relation(fields: [ProductAttributeId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_ProductAttribute_Mapping_ProductAttributeId_ProductA")
-  Product                         Product                 @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_ProductAttribute_Mapping_ProductId_Product_Id")
-
-  @@index([ProductAttributeId], map: "IX_Product_ProductAttribute_Mapping_ProductAttributeId")
-  @@index([ProductId], map: "IX_Product_ProductAttribute_Mapping_ProductId")
-  @@index([ProductId, DisplayOrder], map: "IX_Product_ProductAttribute_Mapping_ProductId_DisplayOrder")
-}
-
-model Product_ProductTag_Mapping {
-  Product_Id    Int
-  ProductTag_Id Int
-  ProductTag    ProductTag @relation(fields: [ProductTag_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_ProductTag_Mapping_ProductTag_Id_ProductTag_Id")
-  Product       Product    @relation(fields: [Product_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_ProductTag_Mapping_Product_Id_Product_Id")
-
-  @@id([Product_Id, ProductTag_Id], map: "PK_Product_ProductTag_Mapping")
-  @@index([ProductTag_Id], map: "IX_Product_ProductTag_Mapping_ProductTag_Id")
-  @@index([Product_Id], map: "IX_Product_ProductTag_Mapping_Product_Id")
-}
-
-model Product_SpecificationAttribute_Mapping {
-  Id                             Int                          @id(map: "PK_Product_SpecificationAttribute_Mapping") @default(autoincrement())
-  CustomValue                    String?                      @db.Citext
-  ProductId                      Int
-  SpecificationAttributeOptionId Int
-  AttributeTypeId                Int
-  AllowFiltering                 Boolean
-  ShowOnProductPage              Boolean
-  DisplayOrder                   Int
-  Product                        Product                      @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_SpecificationAttribute_Mapping_ProductId_Product_Id")
-  SpecificationAttributeOption   SpecificationAttributeOption @relation(fields: [SpecificationAttributeOptionId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Product_SpecificationAttribute_Mapping_SpecificationAttribut")
-
-  @@index([AllowFiltering], map: "IX_PSAM_AllowFiltering")
-  @@index([SpecificationAttributeOptionId, AllowFiltering], map: "IX_PSAM_SpecificationAttributeOptionId_AllowFiltering")
-  @@index([ProductId], map: "IX_Product_SpecificationAttribute_Mapping_ProductId")
-  @@index([SpecificationAttributeOptionId], map: "IX_Product_SpecificationAttribute_Mapping_SpecificationAttribut")
-}
-
 model QueuedEmail {
   Id                    Int          @id(map: "PK_QueuedEmail") @default(autoincrement())
-  From                  String       @db.Citext
-  FromName              String?      @db.Citext
-  To                    String       @db.Citext
-  ToName                String?      @db.Citext
-  ReplyTo               String?      @db.Citext
-  ReplyToName           String?      @db.Citext
-  CC                    String?      @db.Citext
-  Bcc                   String?      @db.Citext
-  Subject               String?      @db.Citext
+  From                  String       @db.NVarChar(500)
+  FromName              String?      @db.NVarChar(500)
+  To                    String       @db.NVarChar(500)
+  ToName                String?      @db.NVarChar(500)
+  ReplyTo               String?      @db.NVarChar(500)
+  ReplyToName           String?      @db.NVarChar(500)
+  CC                    String?      @db.NVarChar(500)
+  Bcc                   String?      @db.NVarChar(500)
+  Subject               String?
   EmailAccountId        Int
   PriorityId            Int
-  Body                  String?      @db.Citext
-  AttachmentFilePath    String?      @db.Citext
-  AttachmentFileName    String?      @db.Citext
+  Body                  String?      @db.NVarChar(Max)
+  AttachmentFilePath    String?      @db.NVarChar(Max)
+  AttachmentFileName    String?      @db.NVarChar(Max)
   AttachedDownloadId    Int
-  CreatedOnUtc          DateTime     @db.Timestamp(6)
-  DontSendBeforeDateUtc DateTime?    @db.Timestamp(6)
+  CreatedOnUtc          DateTime
+  DontSendBeforeDateUtc DateTime?
   SentTries             Int
-  SentOnUtc             DateTime?    @db.Timestamp(6)
+  SentOnUtc             DateTime?
   EmailAccount          EmailAccount @relation(fields: [EmailAccountId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_QueuedEmail_EmailAccountId_EmailAccount_Id")
 
   @@index([CreatedOnUtc(sort: Desc)], map: "IX_QueuedEmail_CreatedOnUtc")
@@ -1585,12 +1625,12 @@ model RecurringPayment {
   CycleLength             Int
   CyclePeriodId           Int
   TotalCycles             Int
-  StartDateUtc            DateTime                  @db.Timestamp(6)
+  StartDateUtc            DateTime
   IsActive                Boolean
   LastPaymentFailed       Boolean
   Deleted                 Boolean
-  CreatedOnUtc            DateTime                  @db.Timestamp(6)
-  Order                   Order                     @relation(fields: [InitialOrderId], references: [Id], onDelete: NoAction, onUpdate: NoAction, map: "FK_RecurringPayment_InitialOrderId_Order_Id")
+  CreatedOnUtc            DateTime
+  Order                   Order                     @relation(fields: [InitialOrderId], references: [Id], onUpdate: NoAction, map: "FK_RecurringPayment_InitialOrderId_Order_Id")
   RecurringPaymentHistory RecurringPaymentHistory[]
 
   @@index([InitialOrderId], map: "IX_RecurringPayment_InitialOrderId")
@@ -1600,8 +1640,8 @@ model RecurringPaymentHistory {
   Id                 Int              @id(map: "PK_RecurringPaymentHistory") @default(autoincrement())
   RecurringPaymentId Int
   OrderId            Int
-  CreatedOnUtc       DateTime         @db.Timestamp(6)
-  RecurringPayment   RecurringPayment @relation(fields: [RecurringPaymentId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_RecurringPaymentHistory_RecurringPaymentId_RecurringPayment_")
+  CreatedOnUtc       DateTime
+  RecurringPayment   RecurringPayment @relation(fields: [RecurringPaymentId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_RecurringPaymentHistory_RecurringPaymentId_RecurringPayment_Id")
 
   @@index([RecurringPaymentId], map: "IX_RecurringPaymentHistory_RecurringPaymentId")
 }
@@ -1617,20 +1657,20 @@ model RelatedProduct {
 
 model ReturnRequest {
   Id                    Int      @id(map: "PK_ReturnRequest") @default(autoincrement())
-  ReasonForReturn       String   @db.Citext
-  RequestedAction       String   @db.Citext
+  ReasonForReturn       String   @db.NVarChar(Max)
+  RequestedAction       String   @db.NVarChar(Max)
   CustomerId            Int
-  CustomNumber          String?  @db.Citext
+  CustomNumber          String?  @db.NVarChar(Max)
   StoreId               Int
   OrderItemId           Int
   Quantity              Int
   ReturnedQuantity      Int
-  CustomerComments      String?  @db.Citext
+  CustomerComments      String?  @db.NVarChar(Max)
   UploadedFileId        Int
-  StaffNotes            String?  @db.Citext
+  StaffNotes            String?  @db.NVarChar(Max)
   ReturnRequestStatusId Int
-  CreatedOnUtc          DateTime @db.Timestamp(6)
-  UpdatedOnUtc          DateTime @db.Timestamp(6)
+  CreatedOnUtc          DateTime
+  UpdatedOnUtc          DateTime
   Customer              Customer @relation(fields: [CustomerId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ReturnRequest_CustomerId_Customer_Id")
 
   @@index([CustomerId], map: "IX_ReturnRequest_CustomerId")
@@ -1638,20 +1678,20 @@ model ReturnRequest {
 
 model ReturnRequestAction {
   Id           Int    @id(map: "PK_ReturnRequestAction") @default(autoincrement())
-  Name         String @db.Citext
+  Name         String @db.NVarChar(400)
   DisplayOrder Int
 }
 
 model ReturnRequestReason {
   Id           Int    @id(map: "PK_ReturnRequestReason") @default(autoincrement())
-  Name         String @db.Citext
+  Name         String @db.NVarChar(400)
   DisplayOrder Int
 }
 
 model ReviewType {
   Id                               Int                                @id(map: "PK_ReviewType") @default(autoincrement())
-  Name                             String                             @db.Citext
-  Description                      String                             @db.Citext
+  Name                             String                             @db.NVarChar(400)
+  Description                      String                             @db.NVarChar(400)
   DisplayOrder                     Int
   VisibleToAllCustomers            Boolean
   IsRequired                       Boolean
@@ -1665,11 +1705,11 @@ model RewardPointsHistory {
   Points        Int
   PointsBalance Int?
   UsedAmount    Decimal   @db.Decimal(18, 4)
-  Message       String?   @db.Citext
-  CreatedOnUtc  DateTime  @db.Timestamp(6)
-  EndDateUtc    DateTime? @db.Timestamp(6)
+  Message       String?   @db.NVarChar(Max)
+  CreatedOnUtc  DateTime
+  EndDateUtc    DateTime?
   ValidPoints   Int?
-  UsedWithOrder String?   @db.Uuid
+  UsedWithOrder String?   @db.UniqueIdentifier
   Order         Order[]
   Customer      Customer  @relation(fields: [CustomerId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_RewardPointsHistory_CustomerId_Customer_Id")
 
@@ -1678,41 +1718,41 @@ model RewardPointsHistory {
 
 model ScheduleTask {
   Id             Int       @id(map: "PK_ScheduleTask") @default(autoincrement())
-  Name           String    @db.Citext
-  Type           String    @db.Citext
+  Name           String    @db.NVarChar(Max)
+  Type           String    @db.NVarChar(Max)
   Seconds        Int
-  LastEnabledUtc DateTime? @db.Timestamp(6)
+  LastEnabledUtc DateTime?
   Enabled        Boolean
   StopOnError    Boolean
-  LastStartUtc   DateTime? @db.Timestamp(6)
-  LastEndUtc     DateTime? @db.Timestamp(6)
-  LastSuccessUtc DateTime? @db.Timestamp(6)
+  LastStartUtc   DateTime?
+  LastEndUtc     DateTime?
+  LastSuccessUtc DateTime?
 }
 
 model SearchTerm {
   Id      Int     @id(map: "PK_SearchTerm") @default(autoincrement())
-  Keyword String? @db.Citext
+  Keyword String? @db.NVarChar(Max)
   StoreId Int
   Count   Int
 }
 
 model Setting {
   Id      Int    @id(map: "PK_Setting") @default(autoincrement())
-  Name    String @db.Citext
-  Value   String @db.Citext
+  Name    String @db.NVarChar(200)
+  Value   String @db.NVarChar(Max)
   StoreId Int
 }
 
 model Shipment {
   Id                    Int            @id(map: "PK_Shipment") @default(autoincrement())
   OrderId               Int
-  TrackingNumber        String?        @db.Citext
+  TrackingNumber        String?        @db.NVarChar(Max)
   TotalWeight           Decimal?       @db.Decimal(18, 4)
-  ShippedDateUtc        DateTime?      @db.Timestamp(6)
-  DeliveryDateUtc       DateTime?      @db.Timestamp(6)
-  ReadyForPickupDateUtc DateTime?      @db.Timestamp(6)
-  AdminComment          String?        @db.Citext
-  CreatedOnUtc          DateTime       @db.Timestamp(6)
+  ShippedDateUtc        DateTime?
+  DeliveryDateUtc       DateTime?
+  ReadyForPickupDateUtc DateTime?
+  AdminComment          String?        @db.NVarChar(Max)
+  CreatedOnUtc          DateTime
   Order                 Order          @relation(fields: [OrderId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_Shipment_OrderId_Order_Id")
   ShipmentItem          ShipmentItem[]
 
@@ -1740,7 +1780,7 @@ model ShippingByWeightByTotalRecord {
   PercentageRateOfSubtotal Decimal @db.Decimal(18, 4)
   RatePerWeightUnit        Decimal @db.Decimal(18, 4)
   LowerWeightLimit         Decimal @db.Decimal(18, 4)
-  Zip                      String? @db.Citext
+  Zip                      String? @db.NVarChar(400)
   StoreId                  Int
   WarehouseId              Int
   CountryId                Int
@@ -1751,8 +1791,8 @@ model ShippingByWeightByTotalRecord {
 
 model ShippingMethod {
   Id                         Int                          @id(map: "PK_ShippingMethod") @default(autoincrement())
-  Name                       String                       @db.Citext
-  Description                String?                      @db.Citext
+  Name                       String                       @db.NVarChar(400)
+  Description                String?                      @db.NVarChar(Max)
   DisplayOrder               Int
   ShippingMethodRestrictions ShippingMethodRestrictions[]
 }
@@ -1761,7 +1801,7 @@ model ShippingMethodRestrictions {
   ShippingMethod_Id Int
   Country_Id        Int
   Country           Country        @relation(fields: [Country_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ShippingMethodRestrictions_Country_Id_Country_Id")
-  ShippingMethod    ShippingMethod @relation(fields: [ShippingMethod_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ShippingMethodRestrictions_ShippingMethod_Id_ShippingMethod_")
+  ShippingMethod    ShippingMethod @relation(fields: [ShippingMethod_Id], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ShippingMethodRestrictions_ShippingMethod_Id_ShippingMethod_Id")
 
   @@id([ShippingMethod_Id, Country_Id], map: "PK_ShippingMethodRestrictions")
   @@index([Country_Id], map: "IX_ShippingMethodRestrictions_Country_Id")
@@ -1774,13 +1814,13 @@ model ShoppingCartItem {
   ProductId            Int
   StoreId              Int
   ShoppingCartTypeId   Int
-  AttributesXml        String?   @db.Citext
+  AttributesXml        String?   @db.NVarChar(Max)
   CustomerEnteredPrice Decimal   @db.Decimal(18, 4)
   Quantity             Int
-  RentalStartDateUtc   DateTime? @db.Timestamp(6)
-  RentalEndDateUtc     DateTime? @db.Timestamp(6)
-  CreatedOnUtc         DateTime  @db.Timestamp(6)
-  UpdatedOnUtc         DateTime  @db.Timestamp(6)
+  RentalStartDateUtc   DateTime?
+  RentalEndDateUtc     DateTime?
+  CreatedOnUtc         DateTime
+  UpdatedOnUtc         DateTime
   Customer             Customer  @relation(fields: [CustomerId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ShoppingCartItem_CustomerId_Customer_Id")
   Product              Product   @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_ShoppingCartItem_ProductId_Product_Id")
 
@@ -1789,12 +1829,26 @@ model ShoppingCartItem {
   @@index([ShoppingCartTypeId, CustomerId], map: "IX_ShoppingCartItem_ShoppingCartTypeId_CustomerId")
 }
 
+model Slide {
+  Id               Int               @id(map: "PK_Slide") @default(autoincrement())
+  Name             String?           @db.NVarChar(Max)
+  PictureId        Int?
+  Description      String?           @db.NVarChar(Max)
+  HyperlinkAddress String?           @db.NVarChar(Max)
+  StartDateUtc     DateTime?
+  EndDateUtc       DateTime?
+  Published        Boolean
+  LimitedToStores  Boolean
+  SubjectToAcl     Boolean
+  WidgetZoneSlide  WidgetZoneSlide[]
+}
+
 model SpecificationAttribute {
   Id                            Int                            @id(map: "PK_SpecificationAttribute") @default(autoincrement())
-  Name                          String                         @db.Citext
+  Name                          String                         @db.NVarChar(Max)
   SpecificationAttributeGroupId Int?
   DisplayOrder                  Int
-  SpecificationAttributeGroup   SpecificationAttributeGroup?   @relation(fields: [SpecificationAttributeGroupId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_SpecificationAttribute_SpecificationAttributeGroupId_Specifi")
+  SpecificationAttributeGroup   SpecificationAttributeGroup?   @relation(fields: [SpecificationAttributeGroupId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_SpecificationAttribute_SpecificationAttributeGroupId_SpecificationAttributeGroup_Id")
   SpecificationAttributeOption  SpecificationAttributeOption[]
 
   @@index([SpecificationAttributeGroupId], map: "IX_SpecificationAttribute_SpecificationAttributeGroupId")
@@ -1802,27 +1856,27 @@ model SpecificationAttribute {
 
 model SpecificationAttributeGroup {
   Id                     Int                      @id(map: "PK_SpecificationAttributeGroup") @default(autoincrement())
-  Name                   String                   @db.Citext
+  Name                   String                   @db.NVarChar(Max)
   DisplayOrder           Int
   SpecificationAttribute SpecificationAttribute[]
 }
 
 model SpecificationAttributeOption {
   Id                                     Int                                      @id(map: "PK_SpecificationAttributeOption") @default(autoincrement())
-  Name                                   String                                   @db.Citext
-  ColorSquaresRgb                        String?                                  @db.Citext
+  Name                                   String                                   @db.NVarChar(Max)
+  ColorSquaresRgb                        String?                                  @db.NVarChar(100)
   SpecificationAttributeId               Int
   DisplayOrder                           Int
   Product_SpecificationAttribute_Mapping Product_SpecificationAttribute_Mapping[]
-  SpecificationAttribute                 SpecificationAttribute                   @relation(fields: [SpecificationAttributeId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_SpecificationAttributeOption_SpecificationAttributeId_Specif")
+  SpecificationAttribute                 SpecificationAttribute                   @relation(fields: [SpecificationAttributeId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_SpecificationAttributeOption_SpecificationAttributeId_SpecificationAttribute_Id")
 
   @@index([SpecificationAttributeId], map: "IX_SpecificationAttributeOption_SpecificationAttributeId")
 }
 
 model StateProvince {
   Id           Int       @id(map: "PK_StateProvince") @default(autoincrement())
-  Name         String    @db.Citext
-  Abbreviation String?   @db.Citext
+  Name         String    @db.NVarChar(100)
+  Abbreviation String?   @db.NVarChar(100)
   CountryId    Int
   Published    Boolean
   DisplayOrder Int
@@ -1837,8 +1891,8 @@ model StockQuantityHistory {
   ProductId          Int
   QuantityAdjustment Int
   StockQuantity      Int
-  Message            String?  @db.Citext
-  CreatedOnUtc       DateTime @db.Timestamp(6)
+  Message            String?  @db.NVarChar(Max)
+  CreatedOnUtc       DateTime
   CombinationId      Int?
   WarehouseId        Int?
   Product            Product  @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_StockQuantityHistory_ProductId_Product_Id")
@@ -1848,22 +1902,22 @@ model StockQuantityHistory {
 
 model Store {
   Id                     Int             @id(map: "PK_Store") @default(autoincrement())
-  Name                   String          @db.Citext
-  Url                    String          @db.Citext
-  Hosts                  String?         @db.Citext
-  CompanyName            String?         @db.Citext
-  CompanyAddress         String?         @db.Citext
-  CompanyPhoneNumber     String?         @db.Citext
-  CompanyVat             String?         @db.Citext
-  DefaultMetaKeywords    String?         @db.Citext
-  DefaultMetaDescription String?         @db.Citext
-  DefaultTitle           String?         @db.Citext
-  HomepageTitle          String?         @db.Citext
-  HomepageDescription    String?         @db.Citext
+  Name                   String          @db.NVarChar(400)
+  Url                    String          @db.NVarChar(400)
+  Hosts                  String?
+  CompanyName            String?
+  CompanyAddress         String?
+  CompanyPhoneNumber     String?
+  CompanyVat             String?
   SslEnabled             Boolean
   DefaultLanguageId      Int
   DisplayOrder           Int
-  Deleted                Boolean
+  Deleted                Boolean         @default(false, map: "DF_Store_Deleted")
+  DefaultTitle           String?         @db.NVarChar(Max)
+  DefaultMetaDescription String?         @db.NVarChar(Max)
+  DefaultMetaKeywords    String?         @db.NVarChar(Max)
+  HomepageDescription    String?         @db.NVarChar(Max)
+  HomepageTitle          String?         @db.NVarChar(Max)
   BlogComment            BlogComment[]
   NewsComment            NewsComment[]
   ProductReview          ProductReview[]
@@ -1872,7 +1926,7 @@ model Store {
 
 model StoreMapping {
   Id         Int    @id(map: "PK_StoreMapping") @default(autoincrement())
-  EntityName String @db.Citext
+  EntityName String @db.NVarChar(400)
   StoreId    Int
   EntityId   Int
   Store      Store  @relation(fields: [StoreId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_StoreMapping_StoreId_Store_Id")
@@ -1883,11 +1937,11 @@ model StoreMapping {
 
 model StorePickupPoint {
   Id           Int      @id(map: "PK_StorePickupPoint") @default(autoincrement())
-  Name         String?  @db.Citext
-  Description  String?  @db.Citext
+  Name         String?  @db.NVarChar(Max)
+  Description  String?  @db.NVarChar(Max)
   AddressId    Int
   PickupFee    Decimal  @db.Decimal(18, 4)
-  OpeningHours String?  @db.Citext
+  OpeningHours String?  @db.NVarChar(Max)
   DisplayOrder Int
   StoreId      Int
   Latitude     Decimal? @db.Decimal(18, 4)
@@ -1897,7 +1951,7 @@ model StorePickupPoint {
 
 model TaxCategory {
   Id           Int    @id(map: "PK_TaxCategory") @default(autoincrement())
-  Name         String @db.Citext
+  Name         String @db.NVarChar(400)
   DisplayOrder Int
 }
 
@@ -1907,7 +1961,7 @@ model TaxRate {
   TaxCategoryId   Int
   CountryId       Int
   StateProvinceId Int
-  Zip             String? @db.Citext
+  Zip             String? @db.NVarChar(Max)
   Percentage      Decimal @db.Decimal(18, 4)
 }
 
@@ -1918,8 +1972,8 @@ model TierPrice {
   StoreId          Int
   Quantity         Int
   Price            Decimal       @db.Decimal(18, 4)
-  StartDateTimeUtc DateTime?     @db.Timestamp(6)
-  EndDateTimeUtc   DateTime?     @db.Timestamp(6)
+  StartDateTimeUtc DateTime?
+  EndDateTimeUtc   DateTime?
   CustomerRole     CustomerRole? @relation(fields: [CustomerRoleId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_TierPrice_CustomerRoleId_CustomerRole_Id")
   Product          Product       @relation(fields: [ProductId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_TierPrice_ProductId_Product_Id")
 
@@ -1929,7 +1983,7 @@ model TierPrice {
 
 model Topic {
   Id                        Int     @id(map: "PK_Topic") @default(autoincrement())
-  SystemName                String? @db.Citext
+  SystemName                String? @db.NVarChar(Max)
   IncludeInSitemap          Boolean
   IncludeInTopMenu          Boolean
   IncludeInFooterColumn1    Boolean
@@ -1938,29 +1992,29 @@ model Topic {
   DisplayOrder              Int
   AccessibleWhenStoreClosed Boolean
   IsPasswordProtected       Boolean
-  Password                  String? @db.Citext
-  Title                     String? @db.Citext
-  Body                      String? @db.Citext
+  Password                  String? @db.NVarChar(Max)
+  Title                     String? @db.NVarChar(Max)
+  Body                      String? @db.NVarChar(Max)
   Published                 Boolean
   TopicTemplateId           Int
-  MetaKeywords              String? @db.Citext
-  MetaDescription           String? @db.Citext
-  MetaTitle                 String? @db.Citext
+  MetaKeywords              String? @db.NVarChar(Max)
+  MetaDescription           String? @db.NVarChar(Max)
+  MetaTitle                 String? @db.NVarChar(Max)
   SubjectToAcl              Boolean
   LimitedToStores           Boolean
 }
 
 model TopicTemplate {
   Id           Int    @id(map: "PK_TopicTemplate") @default(autoincrement())
-  Name         String @db.Citext
-  ViewPath     String @db.Citext
+  Name         String @db.NVarChar(400)
+  ViewPath     String @db.NVarChar(400)
   DisplayOrder Int
 }
 
 model UrlRecord {
   Id         Int     @id(map: "PK_UrlRecord") @default(autoincrement())
-  EntityName String  @db.Citext
-  Slug       String  @db.Citext
+  EntityName String  @db.NVarChar(400)
+  Slug       String  @db.NVarChar(400)
   EntityId   Int
   IsActive   Boolean
   LanguageId Int
@@ -1971,19 +2025,19 @@ model UrlRecord {
 
 model Vendor {
   Id                             Int          @id(map: "PK_Vendor") @default(autoincrement())
-  Name                           String       @db.Citext
-  Email                          String?      @db.Citext
-  MetaKeywords                   String?      @db.Citext
-  MetaTitle                      String?      @db.Citext
-  PageSizeOptions                String?      @db.Citext
-  Description                    String?      @db.Citext
+  Name                           String       @db.NVarChar(400)
+  Email                          String?      @db.NVarChar(400)
+  MetaKeywords                   String?      @db.NVarChar(400)
+  MetaTitle                      String?      @db.NVarChar(400)
+  PageSizeOptions                String?      @db.NVarChar(200)
+  Description                    String?      @db.NVarChar(Max)
   PictureId                      Int
   AddressId                      Int
-  AdminComment                   String?      @db.Citext
+  AdminComment                   String?      @db.NVarChar(Max)
   Active                         Boolean
   Deleted                        Boolean
   DisplayOrder                   Int
-  MetaDescription                String?      @db.Citext
+  MetaDescription                String?      @db.NVarChar(Max)
   PageSize                       Int
   AllowCustomersToSelectPageSize Boolean
   PriceRangeFiltering            Boolean
@@ -1995,16 +2049,16 @@ model Vendor {
 
 model VendorAttribute {
   Id                     Int                    @id(map: "PK_VendorAttribute") @default(autoincrement())
-  Name                   String                 @db.Citext
+  Name                   String                 @db.NVarChar(400)
   IsRequired             Boolean
-  AttributeControlTypeId Int
   DisplayOrder           Int
+  AttributeControlTypeId Int
   VendorAttributeValue   VendorAttributeValue[]
 }
 
 model VendorAttributeValue {
   Id                Int             @id(map: "PK_VendorAttributeValue") @default(autoincrement())
-  Name              String          @db.Citext
+  Name              String          @db.NVarChar(400)
   VendorAttributeId Int
   IsPreSelected     Boolean
   DisplayOrder      Int
@@ -2015,9 +2069,9 @@ model VendorAttributeValue {
 
 model VendorNote {
   Id           Int      @id(map: "PK_VendorNote") @default(autoincrement())
-  Note         String   @db.Citext
+  Note         String   @db.NVarChar(Max)
   VendorId     Int
-  CreatedOnUtc DateTime @db.Timestamp(6)
+  CreatedOnUtc DateTime
   Vendor       Vendor   @relation(fields: [VendorId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_VendorNote_VendorId_Vendor_Id")
 
   @@index([VendorId], map: "IX_VendorNote_VendorId")
@@ -2025,14 +2079,47 @@ model VendorNote {
 
 model Video {
   Id           Int            @id(map: "PK_Video") @default(autoincrement())
-  VideoUrl     String         @db.Citext
+  VideoUrl     String
   ProductVideo ProductVideo[]
 }
 
 model Warehouse {
   Id                        Int                         @id(map: "PK_Warehouse") @default(autoincrement())
-  Name                      String                      @db.Citext
-  AdminComment              String?                     @db.Citext
+  Name                      String                      @db.NVarChar(400)
+  AdminComment              String?                     @db.NVarChar(Max)
   AddressId                 Int
   ProductWarehouseInventory ProductWarehouseInventory[]
+}
+
+model WidgetZone {
+  Id                               Int               @id(map: "PK_WidgetZone") @default(autoincrement())
+  Name                             String            @db.NVarChar(200)
+  SystemName                       String            @db.NVarChar(200)
+  TransitionEffects                String?           @db.NVarChar(Max)
+  AutoPlayInterval                 Int
+  SlideDuration                    Int
+  MinDragOffsetToSlide             Int
+  SlideSpacing                     Int
+  MinSlideWidgetZoneWidth          Int
+  MaxSlideWidgetZoneWidth          Int
+  AutoPlay                         Boolean
+  ArrowNavigationDisplayingTypeId  Int
+  BulletNavigationDisplayingTypeId Int
+  Published                        Boolean
+  SubjectToAcl                     Boolean
+  LimitedToStores                  Boolean
+  WidgetZoneSlide                  WidgetZoneSlide[]
+}
+
+model WidgetZoneSlide {
+  Id                  Int        @id(map: "PK_WidgetZoneSlide") @default(autoincrement())
+  OverrideDescription String?    @db.NVarChar(255)
+  SlideId             Int
+  WidgetZoneId        Int
+  DisplayOrder        Int
+  Slide               Slide      @relation(fields: [SlideId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_WidgetZoneSlide_SlideId_Slide_Id")
+  WidgetZone          WidgetZone @relation(fields: [WidgetZoneId], references: [Id], onDelete: Cascade, onUpdate: NoAction, map: "FK_WidgetZoneSlide_WidgetZoneId_WidgetZone_Id")
+
+  @@index([SlideId], map: "IX_WidgetZoneSlide_SlideId")
+  @@index([WidgetZoneId], map: "IX_WidgetZoneSlide_WidgetZoneId")
 }
